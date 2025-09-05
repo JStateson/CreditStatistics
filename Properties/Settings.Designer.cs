@@ -308,5 +308,29 @@ namespace CreditStatistics.Properties {
                 this["RC_passwords"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BoincWebPassword {
+            get {
+                return ((string)(this["BoincWebPassword"]));
+            }
+            set {
+                this["BoincWebPassword"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BoincWebUsername {
+            get {
+                return ((string)(this["BoincWebUsername"]));
+            }
+            set {
+                this["BoincWebUsername"] = value;
+            }
+        }
     }
 }

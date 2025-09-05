@@ -14,9 +14,8 @@ namespace CreditStatistics
         public CancellationTokenSource cts { get; set; }
         public string sMsgOut { get; set; } = "";
 
-
-        private string cpdn_passwd = "";
-        private string prime_passwd = "";
+        private string boinc_passwd = Properties.Settings.Default.BoincWebPassword;
+        private string boinc_email = Properties.Settings.Default.BoincWebUsername;
 
         string ProjectName = "";
         string Url = "";
@@ -100,8 +99,8 @@ namespace CreditStatistics
 
         private async Task DoPlaywrightWorkAsync(CancellationToken token)
         {
-            if (ProjectName == "prime" || ProjectName == "cpdn")
-                TaskStartPrime(token);
+            if (ProjectName == "primegrid" || ProjectName == "cpdn")
+                TaskStart(token);  //TaskStartPrime(token);
             else if (ProjectName == "mine")
                 TaskStartMine(token);
             else            
@@ -282,13 +281,8 @@ namespace CreditStatistics
                     string sErr = $"Is input visible? {isVisible}";
                     Console.WriteLine(sErr);
                     await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });                
-                    await locator.FillAsync("josephy@stateson.net");
-
-                    
-
-
-                    //await page.FillAsync("input[name='email_addr']", "josephy@stateson.net", new() { Timeout = 5000 });
-                    await page.FillAsync("input[name='passwd']", cpdn_passwd, new() { Timeout = 5000 });
+                    await locator.FillAsync(boinc_email);
+                    await page.FillAsync("input[name='passwd']", boinc_email, new() { Timeout = 5000 });
                     await page.ClickAsync("button[type='submit']");
 
                 }
@@ -314,7 +308,7 @@ namespace CreditStatistics
 
 
             // Go to the login page
-            if (ProjectName == "prime")
+            if (ProjectName == "primegrid")
             {
                 try
                 {
@@ -327,8 +321,8 @@ namespace CreditStatistics
 
                 token.ThrowIfCancellationRequested();
 
-                await page.FillAsync("input[name='email_addr']", "josephy@stateson.net");
-                await page.FillAsync("input[name='passwd']", prime_passwd);
+                await page.FillAsync("input[name='email_addr']", boinc_email);
+                await page.FillAsync("input[name='passwd']", boinc_passwd);
 
                 token.ThrowIfCancellationRequested();
 
@@ -348,9 +342,5 @@ namespace CreditStatistics
 
             sig.bDone = true;
         }
-
-
-
-
     }
 }

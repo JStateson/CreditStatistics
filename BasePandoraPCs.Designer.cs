@@ -161,7 +161,7 @@
         private Button btnClearPC;
         private Button btnCheckPC;
         private Button btnReScan;
-        private ProgressBar pbUSE;
+        public ProgressBar pbUSE;
         private Label label1;
         private Label lbLastScanned;
         private Label label2;

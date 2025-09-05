@@ -269,7 +269,7 @@ namespace CreditStatistics
                 iDGV++;
                 BaseProgressBar.Value++;
                 Application.DoEvents();
-                List<string> OneRaw = Enumerable.Repeat(string.Empty, n+1).ToList();
+                List<string> OneRaw = Enumerable.Repeat(string.Empty, n + 1).ToList();
                 cCalcLimitProj SelectedProject = null;
                 string PCname = row.Cells["PC Name"].Value.ToString();
                 if (PCname == "Totals") break;   // slame as r == ndatarows break ??
@@ -282,10 +282,9 @@ namespace CreditStatistics
                 cPClimit PCl = pandoraConfig.NameToSprintPC(PCname);
                 PCl.ClearTotals();
                 string[] lines;
-                string sArgs = "--host " + PCname + " --get_task_reports ";
 
                 string strResult = ManagedPCs.ContactPCproject(PCname, "--get_task_reports", "").ToLower();
-                if (!IsStillOnline(PCname, true, "BOINC"))
+                if (!IsStillOnline(PCname, true, ManagedPCs.ErrorStatus == 0))
                 {
                     row.Cells["PC name"].Style.ForeColor = cb.ForeColor;
                     RawList.Add(OneRaw);
@@ -294,14 +293,13 @@ namespace CreditStatistics
                 if (strResult != "")
                 {
                     ParseTaskReport(ref strResult, ref PCl);
-                    strResult = ManagedPCs.ContactPCproject(PCname, "--get_project_status", "").ToLower();    
-                    if(strResult != "")
+                    strResult = ManagedPCs.ContactPCproject(PCname, "--get_project_status", "").ToLower();
+                    if (strResult != "")
                     {
                         ParseProjectStatus(ref strResult, ref PCl);
                     }
                 }
 
-                PCl = pandoraConfig.PandoraDatabase[iDGV];
                 for (int j = 0; j < PCl.ProjList.Count; j++)
                 {
                     clp = PCl.ProjList[j];
@@ -435,6 +433,11 @@ namespace CreditStatistics
         private void btnBacklog_Click(object sender, EventArgs e)
         {
             FilterResults("Backlog");
+        }
+
+        private void btnScanData_Click(object sender, EventArgs e)
+        {
+            PerformFetchTasks();
         }
     }
 }

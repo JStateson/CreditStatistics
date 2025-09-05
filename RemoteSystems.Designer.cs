@@ -58,6 +58,7 @@
             version = new DataGridViewTextBoxColumn();
             tabPage2 = new TabPage();
             btnIDNotepad = new Button();
+            btnFetchAC = new Button();
             groupBox1.SuspendLayout();
             tabRemote.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -81,7 +82,7 @@
             label2.AutoSize = true;
             label2.BackColor = SystemColors.Info;
             label2.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label2.Location = new Point(40, 90);
+            label2.Location = new Point(22, 85);
             label2.Margin = new Padding(5, 0, 5, 0);
             label2.Name = "label2";
             label2.Size = new Size(479, 96);
@@ -90,14 +91,14 @@
             // 
             // btnReadBoinc
             // 
-            btnReadBoinc.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnReadBoinc.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold);
             btnReadBoinc.ForeColor = Color.Blue;
-            btnReadBoinc.Location = new Point(21, 17);
+            btnReadBoinc.Location = new Point(22, 12);
             btnReadBoinc.Margin = new Padding(4, 3, 4, 3);
             btnReadBoinc.Name = "btnReadBoinc";
-            btnReadBoinc.Size = new Size(144, 65);
+            btnReadBoinc.Size = new Size(116, 65);
             btnReadBoinc.TabIndex = 33;
-            btnReadBoinc.Text = "Click here to fetch\r\nremote PC names";
+            btnReadBoinc.Text = "Click here to\r\nfetch remote\r\nPC names";
             btnReadBoinc.UseVisualStyleBackColor = true;
             btnReadBoinc.Click += btnReadBoinc_Click;
             // 
@@ -201,14 +202,14 @@
             // 
             // btnListPCs
             // 
-            btnListPCs.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnListPCs.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold);
             btnListPCs.ForeColor = Color.Blue;
-            btnListPCs.Location = new Point(191, 17);
+            btnListPCs.Location = new Point(389, 12);
             btnListPCs.Margin = new Padding(4, 3, 4, 3);
             btnListPCs.Name = "btnListPCs";
-            btnListPCs.Size = new Size(144, 65);
+            btnListPCs.Size = new Size(112, 65);
             btnListPCs.TabIndex = 39;
-            btnListPCs.Text = "Click here to view\r\nlist of Project IDs";
+            btnListPCs.Text = "Click here to\r\nview list of\r\nProject IDs";
             btnListPCs.UseVisualStyleBackColor = true;
             btnListPCs.Click += btnListPCs_Click;
             // 
@@ -216,7 +217,7 @@
             // 
             tabRemote.Controls.Add(tabPage1);
             tabRemote.Controls.Add(tabPage2);
-            tabRemote.Location = new Point(554, 90);
+            tabRemote.Location = new Point(593, 84);
             tabRemote.Name = "tabRemote";
             tabRemote.SelectedIndex = 0;
             tabRemote.Size = new Size(593, 492);
@@ -331,19 +332,33 @@
             // 
             // btnIDNotepad
             // 
-            btnIDNotepad.Location = new Point(430, 27);
+            btnIDNotepad.Location = new Point(509, 116);
             btnIDNotepad.Name = "btnIDNotepad";
-            btnIDNotepad.Size = new Size(89, 44);
+            btnIDNotepad.Size = new Size(70, 44);
             btnIDNotepad.TabIndex = 41;
             btnIDNotepad.Text = "Copy To\r\nnotepad";
             btnIDNotepad.UseVisualStyleBackColor = true;
             btnIDNotepad.Click += btnIDNotepad_Click;
             // 
+            // btnFetchAC
+            // 
+            btnFetchAC.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold);
+            btnFetchAC.ForeColor = Color.Blue;
+            btnFetchAC.Location = new Point(205, 12);
+            btnFetchAC.Margin = new Padding(4, 3, 4, 3);
+            btnFetchAC.Name = "btnFetchAC";
+            btnFetchAC.Size = new Size(120, 65);
+            btnFetchAC.TabIndex = 42;
+            btnFetchAC.Text = "Click here for\r\napp configs\r\nused in sprint";
+            btnFetchAC.UseVisualStyleBackColor = true;
+            btnFetchAC.Click += btnFetchAC_Click;
+            // 
             // RemoteSystems
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1159, 594);
+            ClientSize = new Size(1209, 594);
+            Controls.Add(btnFetchAC);
             Controls.Add(btnIDNotepad);
             Controls.Add(btnReadBoinc);
             Controls.Add(tabRemote);
@@ -398,5 +413,6 @@
         private DataGridViewTextBoxColumn nGPUs;
         private DataGridViewTextBoxColumn version;
         private Button btnIDNotepad;
+        private Button btnFetchAC;
     }
 }

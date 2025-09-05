@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+// this is currently not used
 namespace CreditStatistics
 {
     internal class PortCheckerService

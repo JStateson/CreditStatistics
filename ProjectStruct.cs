@@ -35,9 +35,11 @@ namespace CreditStatistics
         public string UTC_Start = "";
         public string UTC_End = "";
         public DateTimeOffset UTCstart;   // local time is UTCstart.ToLocalTime()
-        public DateTimeOffset UTCend;
-        
+        public DateTimeOffset UTCend;        
         public string DateLastPortScan = "not fully scanned";
+        public string boinc_passwd = Properties.Settings.Default.BoincWebPassword;
+        public string boinc_email = Properties.Settings.Default.BoincWebUsername;
+
 
         public static readonly string[] KnownProjects = @"
 sidock
@@ -227,7 +229,7 @@ hostid=
 0
  Valid () .
 
-rakesearch
+rakesearch rake
 https://rake.boincfast.ru/rakesearch/results.php?
 hostid=
 &state=4
@@ -293,7 +295,7 @@ null
 0
 yoyo
 
-WCG WORLDCOMMUNITYGRID
+WCG WORLDCOMMUNITYGRID community
 https://www.worldcommunitygrid.org/contribution
 device?id=
 &type=B
@@ -366,6 +368,17 @@ hostid=
 &appid=
 2
 1 2
+&offset=
+0
+ Valid () .
+
+rnaworld rna
+https://www.rnaworld.de/rnaworld/results.php?
+hostid=
+&state=4
+&appid=
+2
+2 3 7 8 15 16
 &offset=
 0
  Valid () .
@@ -478,7 +491,7 @@ project: https://escatter11.fullerton.edu/nfs/
 ";
 
 
-        private static readonly string DefaultCCconfig = @"
+        public static readonly string DefaultCCconfig = @"
 <cc_config>
  <log_flags>
   <task>0</task>
@@ -493,6 +506,22 @@ project: https://escatter11.fullerton.edu/nfs/
 </cc_config>
 ";
 
+        public static readonly string DefaultAPPconfig = @"
+<app_config>
+<!--This is a default app_config and is NOT on the remote pc
+you can edit it and then send it if desired
+    <app_version>
+        <app_name>whatever</app_name>
+        <plan_class>whatever</plan_class>
+        <cmdline>whatever</cmdline>
+        <avg_ncpus>1.0</avg_ncpus>
+        <ngpus>1.0</ngpus>
+    </app_version>
+-->
+<project_max_concurrent>2</project_max_concurrent>
+    <report_results_immediately>0</report_results_immediately>
+</app_config>
+";
 
         public void Init()
         {
@@ -504,6 +533,7 @@ project: https://escatter11.fullerton.edu/nfs/
             globals.WhereMasterPandora = globals.WhereDOC + "\\" + WhereMasterPandora;
             globals.WhereCurrentDefaultCC_config = globals.WhereDOC + "\\" + WhereCurrentDefaultCC_config;
             globals.WhereCurrentDefaultDatabaseConfig = globals.WhereDOC + "\\" + WhereCurrentDefaultDatabaseConfig;
+            globals.WhereAppVersions = globals.WhereDOC + "\\" + WhereAppVersions;
             globals.WhereCurrentDefaultPandoraConfig = globals.WhereDOC + "\\" + WhereCurrentDefaultPandoraConfig;
             globals.WhereProjectAccessParams = globals.WhereDOC + "\\" + WhereProjectAccessParams;
 
@@ -582,15 +612,38 @@ project: https://escatter11.fullerton.edu/nfs/
                     sCountValids = KnownProjects[i]
                 });
             }
+            List<string>NoResponse= new List<string>();
+            NoResponse.Add("No Response");
             for (i = 0; i < n; i++)
+            {
                 ProjectList[i].shortname = ShortName(i);
+                ProjectList[i].AppConfigVersions = NoResponse;
+            }
+
+            if (File.Exists(globals.WhereAppVersions))
+            {
+                string[] sSAppVersions = File.ReadAllLines(globals.WhereAppVersions);
+                foreach (string s in sSAppVersions)
+                {
+                    string[] lines = s.Split(':');
+                    string shortname = lines[0];
+                    cPSlist psi = GetProjectByShortName(shortname);
+                    string[] sVers = lines[1].Split(',');
+                    psi.AppConfigVersions = new List<string>();
+                    foreach (string t in sVers)
+                    {
+                        psi.AppConfigVersions.Add(t.Replace("'", "").Trim());
+                    }
+                }
+            }
+
 
             PandoraConfig pc = new PandoraConfig(ref localProjectStats);
             TempletDB = pc.ParsePandoraConfig(current_default_database_config, "templet");
             foreach (cCalcLimitProj lp in TempletDB.ProjList)
             {
-                cPSlist psi = GetProjectByShortName(lp.ShortName);
-                psi.sStudyV = lp.sStudy;
+                cPSlist PSl = GetProjectByShortName(lp.ShortName);
+                PSl.sStudyV = lp.sStudy;
                 SetSprintUsage(lp.ShortName, true);
             }
             pc = null;
@@ -798,6 +851,7 @@ project: https://escatter11.fullerton.edu/nfs/
                 return File.ReadAllLines(globals.WhereDefaultHostList);
             else return null;
         }
+
         public void AddLocalHostsProjects()
         {
             if (PathTo_boinccmd_exe == "")
@@ -862,7 +916,6 @@ project: https://escatter11.fullerton.edu/nfs/
         {
             if (Proj_PC_ID.Count == 0) return false;
             int i, n = 0;
-
             foreach (string s in Proj_PC_ID)
             {
                 i = s.IndexOf(":");
@@ -874,7 +927,7 @@ project: https://escatter11.fullerton.edu/nfs/
                 }
                 string PCname = s.Substring(0, i).Trim();
                 if (i >= s.Length) continue;
-
+                bool HasAC = false;
                 string sRem = s.Substring(i + 1).Trim();
                 string[] sPairHosts = sRem.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 for (int j = 0; j < sPairHosts.Length; j++)
@@ -889,7 +942,12 @@ project: https://escatter11.fullerton.edu/nfs/
                     }
                     n++;
                     string ProjID = sPair[1].Trim();
-                    ManagedPCs.AddProj(PCname, shortName, ProjID, iLoc);
+                    string sStudy = ProjectList[iLoc].sStudyV;
+                    if (sPair.Length >= 3)
+                        sStudy = sPair[2].Trim();
+                    if (sPair.Length == 4)
+                        HasAC = (sPair[3] == "1");
+                    ManagedPCs.AddProj(PCname, shortName, ProjID, iLoc, sStudy, HasAC);
                 }
             }
             return n > 0;

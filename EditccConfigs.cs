@@ -15,7 +15,7 @@ using static CreditStatistics.PandoraConfig;
 
 namespace CreditStatistics
 {
-    internal partial class EditAllConfig : BasePandoraPCs
+    internal partial class EditccConfigs : BasePandoraPCs
     {
         cPClimit CurrentPCDB;
         string OneShot = "";
@@ -24,7 +24,7 @@ namespace CreditStatistics
             SelectConfig(e.CheckedName);
         }
 
-        public EditAllConfig(ref cProjectStruct rProjectStats, ref ReqCmds RreqCmd)
+        public EditccConfigs(ref cProjectStruct rProjectStats, ref ReqCmds RreqCmd)
 : base(ref rProjectStats, ref RreqCmd) //Pass required parameters to base constructor
         {
             InitializeComponent();

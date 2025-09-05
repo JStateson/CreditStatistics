@@ -16,13 +16,14 @@ using System.Net.Sockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.JavaScript;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static CreditStatistics.globals;
 using static CreditStatistics.PandoraConfig;
-
+using static CreditStatistics.globals;
 
 namespace CreditStatistics
 {
@@ -67,18 +68,29 @@ namespace CreditStatistics
             WorkingFolderLoc.Text = globals.WhereDOC;
             tbWhereBoinc.Text = PathToBoincData;
             AppendColoredText(rtbLocalHostsBT, "Local PCs using 31416:" + NL + NL, Color.Blue);
+            MakeDGV();
+            this.Enabled = true; // Re-enable clicks
+        }
+
+        private void MakeDGV()
+        {
+            rtbLocalHostsBT.Clear();
             dgv.Rows.Clear();
-            Task aTask;
+            //Task aTask;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
                 string uName = (hi.UserName == "" ? "null" : hi.UserName);
                 string uPass = (hi.Password == "" ? "null" : hi.Password);
 
+                /*
                 aTask = Task.Run(async () =>
                 {
                     hi.HasBOINC = await globals.PortChecker.IsPortOpenAsync(hi.IPaddress, 31416);
                 });
                 aTask.Wait();
+                */
+
+
                 if (hi.HasBOINC)
                     hi.sVersion = GetVersion(hi.IPaddress);
 
@@ -93,22 +105,14 @@ namespace CreditStatistics
                 s += hi.IPaddress + NL;
                 AppendColoredText(rtbLocalHostsBT, s + NL, Color.Blue);
             }
-            this.Enabled = true; // Re-enable clicks
         }
 
-        private void AppendColoredText(RichTextBox box, string text, Color color)
-        {
-            box.SelectionStart = box.TextLength;
-            box.SelectionLength = 0;
-            box.SelectionColor = color;
-            box.AppendText(text);
-            box.SelectionColor = box.ForeColor;
-        }
 
         private void btnReadBoinc_Click(object sender, EventArgs e)
         {
             if (CreateAllHostList())
                 CreateRemoteHostlist();
+            MakeDGV();
         }
 
         private bool CreateAllHostList()
@@ -116,7 +120,7 @@ namespace CreditStatistics
             string FilePath = Path.Combine(BoincTaskFolder.Text, "computers.xml");
             if (!File.Exists(FilePath))
             {
-                MessageBox.Show("Cannot find 'computers.xml'. This app uses boinctasks database or you can load a text equivalent");
+                MessageBox.Show("Cannot find 'computers.xml'. This app uses boinctasks database");
                 return false;
             }
             List<string> PCnames = new List<string>();
@@ -191,7 +195,8 @@ namespace CreditStatistics
                     int sLoc = SNlocs[i];
                     string sName = ProjectStats.ShortName(sLoc);
                     ManagedPCs.strResult += "ProjName:" + sName + " ProjID:" + sProj + NL;
-                    ManagedPCs.AddProj(PCname, sName, sProj, sLoc);
+                    bool HasAppConfig = File.Exists(globals.GetAppConfigFilename(PCname, sName));
+                    ManagedPCs.AddProj(PCname, sName, sProj, sLoc, ProjectStats.ProjectList[sLoc].sStudyV, HasAppConfig);
                 }
                 if (n == 0)
                 {
@@ -269,7 +274,7 @@ namespace CreditStatistics
             string r = Environment.NewLine;
             string s = "List of online PCs handled by BoincTasks" + r;
             AppendColoredText(rtbLocalHostsBT, s, Color.Blue);
-            HostRPC hostRPC;
+            //HostRPC hostRPC;
             i = -1;
             foreach (string PC in PCnamesIN)
             {
@@ -363,7 +368,8 @@ namespace CreditStatistics
                 int sLoc = SNlocs[i];
                 string sName = ProjectStats.ShortName(sLoc);
                 sOut += "ProjName:" + sName + " ProjID:" + sProj + NL;
-                ManagedPCs.AddProj(shost, sName, sProj, sLoc);
+                bool hasAppConfig = File.Exists(globals.GetAppConfigFilename(shost, sName));
+                ManagedPCs.AddProj(shost, sName, sProj, sLoc, ProjectStats.ProjectList[sLoc].sStudyV, hasAppConfig);
             }
             return sOut.Trim();
         }
@@ -440,19 +446,19 @@ namespace CreditStatistics
             string t = "";
             rtbLocalHostsBT.Clear();
             foreach (cPSlist ps in ProjectStats.ProjectList)
-            { 
+            {
                 lPN = Math.Max(lPN, ps.shortname.Length);
                 foreach (string sID in ps.HostPCNames)
                 {
                     lSN = Math.Max(lSN, sID.Length);
                 }
             }
-  
+
             foreach (cPSlist ps in ProjectStats.ProjectList)
             {
 
                 int n = ps.HostPCNames.Count;
-                AppendColoredText(rtbLocalHostsBT,t + Rp(ps.shortname, lSN) + ": ", (n == 0 ? Color.Red : Color.Blue));
+                AppendColoredText(rtbLocalHostsBT, t + Rp(ps.shortname, lSN) + ": ", (n == 0 ? Color.Red : Color.Blue));
                 t = "";
 
                 foreach (string sID in ps.HostPCNames)
@@ -473,7 +479,7 @@ namespace CreditStatistics
 
         private void btnListPCs_Click(object sender, EventArgs e)
         {
-            ShowClients(); 
+            ShowClients();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -500,6 +506,7 @@ namespace CreditStatistics
                 pc.WriteDBrecord(ref PCl);
             }
             ProjectStats.sshCredentials.SaveCredentials();
+            MakeDGV();
         }
 
         private void btnIDNotepad_Click(object sender, EventArgs e)
@@ -507,6 +514,38 @@ namespace CreditStatistics
             CSendNotepad SendNotepad = new CSendNotepad();
             string npTitle = "PC - Project matrix";
             SendNotepad.PasteToNotepad(rtbLocalHostsBT.Text);
+        }
+
+        private async void btnFetchAC_Click(object sender, EventArgs e)
+        {
+            PandoraRPC pandoraRPC = new PandoraRPC();
+            pandoraRPC.Init(ref ProjectStats);
+            Color fC;
+            rtbLocalHostsBT.Clear();
+            foreach (cPClimit PCl in ProjectStats.PandoraDatabase)
+            {
+                string PCname = PCl.PCname;
+                foreach(cCalcLimitProj CLp in PCl.ProjList)
+                {
+                    string ShortName = CLp.ShortName;
+                    await pandoraRPC.FetchOne_app_config(PCname, ShortName);
+                    if(PCl.ErrorStatus < ERR_critical)
+                    {
+                        string[] ssAppConfig = PCl.strResult.Split(new string[] { "\n", "\r", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                        string sOut = globals.WriteACrecord(GetAppConfigFilename( PCname, ShortName), ref ssAppConfig);
+                        fC = Color.Blue;
+                        if (PCl.ErrorStatus == ERR_warning)
+                            fC = Color.Black;
+                        AppendColoredText(rtbLocalHostsBT, sOut, fC);
+                    }
+                    else
+                    {
+                        fC = Color.Red;
+                        AppendColoredText(rtbLocalHostsBT, "PC " + PCname + " Proj: " + ShortName + " has  no app_config\r\n", fC);
+                    }
+                    await Task.Delay(500);
+                }
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace CreditStatistics
 {
-    partial class EditAllConfig
+    partial class EditccConfigs
     {
         /// <summary>
         /// Required designer variable.
@@ -97,7 +97,7 @@
             btnSavePC.UseVisualStyleBackColor = true;
             btnSavePC.Click += btnSavePC_Click;
             // 
-            // EditAllConfig
+            // EditccConfigs
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -109,8 +109,8 @@
             Controls.Add(tbPC_config);
             Controls.Add(tbCC_config);
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            Name = "EditAllConfig";
-            Text = "AccessAllConfigs";
+            Name = "EditccConfigs";
+            Text = "Access CC configs";
             FormClosed += EditAllConfig_FormClosed;
             Controls.SetChildIndex(tbCC_config, 0);
             Controls.SetChildIndex(tbPC_config, 0);

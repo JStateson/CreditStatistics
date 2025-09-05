@@ -218,6 +218,7 @@
             Controls.Add(btnSave);
             Controls.Add(btnSendApp);
             Controls.Add(gbPCs);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
             Name = "ShowPandora";
             Text = "AppProjPan";
             ResumeLayout(false);

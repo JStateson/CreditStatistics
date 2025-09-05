@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -34,16 +35,18 @@ namespace CreditStatistics
         private string projID = "";
         private int inxProj = 0;
         private string sResult = "";
+
         private bool bDone = false;
         public CancellationTokenSource cts;
         private int TimeOut = 20000; // 20 seconds timeout for the task
-        private cProjectStudiesInfo SelectedEdit_psi = null;
         private ReadSitePage readSitePage;
         private RunList sigRun = new RunList();
         private cSequencer ts;
         private bool bInSequencer = false;
         private static int TimeMax = 20;
         private int Timeout = TimeMax;
+
+        private cProjectStudiesInfo SelectedEdit_psi = null;
 
         public GetStudies(ref cProjectStruct rProjectStats)
         {
@@ -68,10 +71,12 @@ namespace CreditStatistics
 
         private void InitialLoad(object sender, EventArgs e)
         {
-            lbSelProj.DataSource = ProjectStats.ManagedPCs.MatchingShortnames; 
-            if(lbSelProj.Items.Count <= 0)
+            string PCname = Dns.GetHostName().ToLower();
+            ProjectStats.ManagedPCs.SelectCurrentFromPC(PCname);
+            lbSelProj.DataSource = ProjectStats.ManagedPCs.MatchingShortnames;
+            if (lbSelProj.Items.Count <= 0)
             {
-                MessageBox.Show("You must obtain projects and remote PCs first!", "Critical Error: form will close",MessageBoxButtons.OK,MessageBoxIcon.Stop);
+                MessageBox.Show("You must obtain projects and remote PCs first!", "Critical Error: form will close", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 this.Close();
                 return;
             }
@@ -122,7 +127,7 @@ namespace CreditStatistics
 
         private string ExtractAppIds(int inxProj, ref string input)
         {
-            string[] sExclude = { "All", " progress", " pending", " inconclusive", "Invalid", "Error", "Show ", "Next ", "Valid" };
+            string[] sExclude = { "All", " progress", " pending", " inconclusive", "Invalid", "Error", "Show ", "Next ", "Valid", "Pending" };
             string shortName = psi[inxProj].ShortName;
             string sOut = "";
             string sVal;
@@ -260,9 +265,9 @@ namespace CreditStatistics
                 string sID = row.Cells["ID"].Value.ToString();
                 string sName = row.Cells["NameStudy"].Value.ToString();
                 string sDays = row.Cells["DaysDuration"].Value.ToString();
-                string sCPUs = row.Cells["CPUs"].Value.ToString();  
+                string sCPUs = row.Cells["CPUs"].Value.ToString();
                 string sGPUs = row.Cells["GPUs"].Value.ToString();
-                
+                if (sID == "-1") continue;
                 if (row.Cells["OrigID"].Value == null)
                     OrigID = sID;
                 else OrigID = row.Cells["OrigID"].Value.ToString();
@@ -296,7 +301,7 @@ namespace CreditStatistics
                 }
 
 
-                SelectedEdit_psi.UpdateStudy(sID, sName, OrigID, nDays, nCPUs, nGPUs);
+                SelectedEdit_psi.UpdateStudy(sID, OrigID, sName, nDays, nCPUs, nGPUs);
             }
         }
 
@@ -340,6 +345,11 @@ namespace CreditStatistics
         private void dgvStudyInfo_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             int rowIndex = e.RowIndex;
+        }
+
+        private void tcStudy_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

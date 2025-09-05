@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic;
+﻿using Microsoft.Playwright;
+using Microsoft.VisualBasic;
 
 using System;
 using System.Collections.Generic;
@@ -71,6 +72,25 @@ namespace CreditStatistics
             return "<set_cc_config>\n" + cc_in + "</set_cc_config>\n";
         }
 
+        private bool GetErrorInfo(string s, out string sErr)
+        {
+            sErr = "";
+            int i = s.IndexOf("<error>");
+            if (i == -1) return false;
+            int j = s.IndexOf("</error>", i);
+            Debug.Assert(j != -1);
+            sErr = s.Substring(i + 7, j - i - 7);
+            return true;
+        }
+
+        private string StripReply(string r)
+        {
+            int i = r.IndexOf("<boinc_gui_rpc_reply>");
+            if (i < 0) return r;
+            int j = r.IndexOf("</boinc_gui_rpc_reply>", i + 21);
+            Debug.Assert(j != -1);
+            return r.Substring(i + 21, j - i - 21);
+        }
 
         public void Init(ref cProjectStruct rProjectStats)
         { 
@@ -108,6 +128,29 @@ namespace CreditStatistics
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await AllSystemsAsync(cts.Token);
         }
+
+        public async Task FetchOne_app_config(string PCname, string shortname)
+        {
+            cmdRequest = new CmdRequest();
+            cmdRequest.Fetch_AC = true;
+            cmdRequest.AC_ShortName = shortname;
+            cmdRequest.CmdPCname = PCname;
+            cmdRequest.ReqIndex = nameTOindex(PCname);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await SystemAsync(cts.Token);
+        }
+
+        public async Task WriteOne_app_config(string PCname, string shortname)
+        {
+            cmdRequest = new CmdRequest();
+            cmdRequest.Write_AC = true;
+            cmdRequest.AC_ShortName = shortname;
+            cmdRequest.CmdPCname = PCname;
+            cmdRequest.ReqIndex = nameTOindex(PCname);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await SystemAsync(cts.Token);
+        }
+
 
         public async Task WriteSelected_app_config(string shortname)
         {
@@ -183,6 +226,63 @@ namespace CreditStatistics
                 using var stream = client.GetStream();
 
 
+                if(cmdRequest.Fetch_AC)
+                {
+                    string sUrl = "";
+                    cCalcLimitProj clp = pcx.GetProjStruct(cmdRequest.AC_ShortName);
+                    if (clp == null) // not a sprint project
+                    {
+                        cPSlist PSl = ProjectStats.GetProjectByShortName(cmdRequest.AC_ShortName);
+                        sUrl = PSl.MasterUrl;
+                    }
+                    else sUrl = clp.ProjUrl;
+                    data = cmdRequest.FormReq("<get_app_config>\n" + "<url>" + sUrl + "</url>\n" + "</get_app_config>\n");
+                    await stream.WriteAsync(data, 0, data.Length, token);
+                    await stream.FlushAsync(token);
+                    bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    response = StripReply(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                    if (GetErrorInfo(response, out string sErr))
+                    {
+                        pcx.strResult = sErr;
+                        pcx.ErrorStatus = ERR_critical;
+                    }
+                    else
+                    {
+                        pcx.strResult = response;
+                        if (response.Contains("default cc_config"))
+                            pcx.ErrorStatus = ERR_warning;
+                        else
+                            pcx.ErrorStatus = 0;
+                    }
+                }
+
+                if (cmdRequest.Write_AC)
+                {
+                    string sUrl = "";
+                    if (UnixIOout == "")
+                    {
+                        pcx.strResult = "Error: output buffer UnixIOout was empty" + Environment.NewLine;
+                        return;
+                    }
+                    cCalcLimitProj clp = pcx.GetProjStruct(cmdRequest.AC_ShortName);
+                    if (clp == null) // not a sprint project
+                    {
+                        cPSlist PSl = ProjectStats.GetProjectByShortName(cmdRequest.AC_ShortName);
+                        sUrl = PSl.MasterUrl;
+                    }
+                    else sUrl = clp.ProjUrl;
+                        data = cmdRequest.FormReq("<set_app_config>\n<url>" + sUrl + "</url>\n" +
+                            UnixIOout + "</set_app_config>\n");
+                    await stream.WriteAsync(data, 0, data.Length, token);
+                    await stream.FlushAsync(token);
+                    bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    pcx.strResult = response;
+                    cmdRequest.CMDerr = 0;
+                    cmdRequest.CMDresults = response;
+                }
+
+
                 if (cmdRequest.bIssueCmd)
                 {
                     cCalcLimitProj clp = pcx.GetProjStruct(cmdRequest.CmdPCname);
@@ -193,7 +293,13 @@ namespace CreditStatistics
                     response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     pcx.strResult = response;
                     if (response.Contains("success"))
+                    {
                         pcx.ErrorStatus = 0;
+                    }
+                    else if (response.Contains("No such project"))
+                    {
+                        pcx.ErrorStatus = 0;// ERR_warning;
+                    }
                     else pcx.ErrorStatus = ERR_critical;
                 }
             }
@@ -263,17 +369,24 @@ namespace CreditStatistics
                     }
 
 
+
                     if(cmdRequest.Fetch_AC)
                     {
                         cCalcLimitProj clp = pc.GetProjStruct(cmdRequest.AC_ShortName);
-                        data = cmdRequest.FormReq("<get_app_config>\n" + "<url>" + clp.ProjUrl+ "</url>\n" + "</get_app_config>\n") ;
+                        data = cmdRequest.FormReq("<get_app_config>\n" + "<url>" + clp.ProjUrl + "</url>\n" + "</get_app_config>\n");
                         await stream.WriteAsync(data, 0, data.Length, token);
                         await stream.FlushAsync(token);
                         bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                        response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        response = StripReply(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                        if (GetErrorInfo(response, out string sErr))
+                        {
+                            pc.strResult = sErr;
+                            pc.ErrorStatus = ERR_warning;
+                            response = cProjectStruct.DefaultAPPconfig;
+                        }
                         if (pc.Parse_AC(ref response, out XDocument doc))
                         {
-                            globals.WriteACrecord(pc.PCname, cmdRequest.AC_ShortName, ref pc.app_config);
+                            globals.WriteACrecord(GetAppConfigFilename( pc.PCname, cmdRequest.AC_ShortName), ref pc.app_config);
                             double defaultDouble = -1.0;
                             int defaultInt = -1;
 
@@ -311,6 +424,12 @@ namespace CreditStatistics
                         await stream.FlushAsync(token);
                         bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
                         response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        if (GetErrorInfo(response, out string sErr))
+                        {
+                            pc.strResult = sErr;
+                            pc.ErrorStatus = ERR_warning;
+                            response = "<!-- this is the default cc_config -->\n" + cProjectStruct.DefaultCCconfig;
+                        }
                         if (pc.Parse_CC_PC(ref response))
                         {
                             globals.WriteCCrecord(pc.PCname, ref pc.cc_config);
@@ -360,7 +479,7 @@ namespace CreditStatistics
                         else
                         {
                             pc.ErrorStatus = ERR_critical;
-                            pc.strResult = "cannot send cc and pp config to " + pc.PCname + " at " + pc.IPaddress;
+                            pc.strResult = "cannot send cc and app config to " + pc.PCname + " at " + pc.IPaddress;
                         }
                     }
 
@@ -418,6 +537,7 @@ namespace CreditStatistics
 
     }
 
+    // this is no longer used
     internal class HostRPC
     {
         public string[] cc_buff;    // cc_config

@@ -333,7 +333,7 @@ namespace CreditStatistics
             {
                 SelectedPC.app_config = tbInfo.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);                
                 tbResInfo.Text = pc.WriteDBrecord(ref SelectedPC);
-                tbResInfo.Text += globals.WriteACrecord(PCname, ShortName, ref SelectedPC.app_config);                
+                tbResInfo.Text += globals.WriteACrecord(globals.GetAppConfigFilename( PCname, ShortName), ref SelectedPC.app_config);                
             }
         }
 

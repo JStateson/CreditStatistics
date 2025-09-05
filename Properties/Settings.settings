@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="ProjectStatistics.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="CreditStatistics.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="InitialUrl" Type="System.String" Scope="User">
@@ -75,6 +75,12 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="RC_passwords" Type="System.String[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BoincWebPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BoincWebUsername" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

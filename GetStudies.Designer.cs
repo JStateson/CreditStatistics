@@ -42,7 +42,6 @@
             label2 = new Label();
             btnApply = new Button();
             dgvStudyInfo = new DataGridView();
-            timerDoSelected = new System.Windows.Forms.Timer(components);
             ID = new DataGridViewTextBoxColumn();
             DaysDuration = new DataGridViewTextBoxColumn();
             NameStudy = new DataGridViewTextBoxColumn();
@@ -50,6 +49,8 @@
             GPUs = new DataGridViewTextBoxColumn();
             MaxApps = new DataGridViewTextBoxColumn();
             OrigID = new DataGridViewTextBoxColumn();
+            timerDoSelected = new System.Windows.Forms.Timer(components);
+            label3 = new Label();
             tcStudy.SuspendLayout();
             tabView.SuspendLayout();
             tabEdit.SuspendLayout();
@@ -77,13 +78,10 @@
             // 
             // label1
             // 
-            label1.AutoSize = true;
-            label1.BackColor = SystemColors.Info;
-            label1.Location = new Point(209, 63);
+            label1.Location = new Point(0, 0);
             label1.Name = "label1";
-            label1.Size = new Size(122, 30);
-            label1.TabIndex = 4;
-            label1.Text = "Project Name: double\r\nclick to view page";
+            label1.Size = new Size(100, 23);
+            label1.TabIndex = 10;
             // 
             // lbSelProj
             // 
@@ -135,6 +133,7 @@
             tcStudy.SelectedIndex = 0;
             tcStudy.Size = new Size(655, 466);
             tcStudy.TabIndex = 9;
+            tcStudy.SelectedIndexChanged += tcStudy_SelectedIndexChanged;
             // 
             // tabView
             // 
@@ -182,7 +181,6 @@
             // 
             // dgvStudyInfo
             // 
-            dgvStudyInfo.AllowUserToDeleteRows = false;
             dgvStudyInfo.AllowUserToResizeColumns = false;
             dgvStudyInfo.AllowUserToResizeRows = false;
             dgvStudyInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -193,11 +191,6 @@
             dgvStudyInfo.Size = new Size(441, 328);
             dgvStudyInfo.TabIndex = 0;
             dgvStudyInfo.RowsAdded += dgvStudyInfo_RowsAdded;
-            // 
-            // timerDoSelected
-            // 
-            timerDoSelected.Interval = 1000;
-            timerDoSelected.Tick += timerDoSelected_Tick;
             // 
             // ID
             // 
@@ -245,11 +238,28 @@
             OrigID.Name = "OrigID";
             OrigID.Visible = false;
             // 
+            // timerDoSelected
+            // 
+            timerDoSelected.Interval = 1000;
+            timerDoSelected.Tick += timerDoSelected_Tick;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.BackColor = SystemColors.Info;
+            label3.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label3.Location = new Point(209, 59);
+            label3.Name = "label3";
+            label3.Size = new Size(117, 26);
+            label3.TabIndex = 11;
+            label3.Text = "Project Name double\r\nclick to view it's page";
+            // 
             // GetStudies
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1086, 550);
+            Controls.Add(label3);
             Controls.Add(tcStudy);
             Controls.Add(btnEdit);
             Controls.Add(btnView);
@@ -293,5 +303,6 @@
         private DataGridViewTextBoxColumn GPUs;
         private DataGridViewTextBoxColumn MaxApps;
         private DataGridViewTextBoxColumn OrigID;
+        private Label label3;
     }
 }

@@ -421,10 +421,10 @@ namespace CreditStatistics
                     RawTable = RawPage.Substring(iStart, iEnd - iStart);
                     return BuildStatsTable(ref RawTable, ref runList);
                 case "primegrid":
-                    iStart = RawPage.IndexOf("<tr class=row0>");
+                    iStart = RawPage.IndexOf("<tr class=\"row0\">");
                     if (iStart < 0)
                     {
-                        runList.sMsgErr += "error: no data or missing 'tr class=row0'\n"; // had to remove < and >
+                        runList.sMsgErr += "error: no data or missing 'tr class=\"row0\"'\n"; // had to remove < and >
                         return -4;
                     }
                     iEnd = RawPage.Substring(iStart).IndexOf("</table>");   // need skip over any earlier tables in the header
@@ -565,19 +565,29 @@ namespace CreditStatistics
         private int BuildPrimeTable(ref string RawTable, ref RunList runList)
         {
             string s;
+            int WUs = 0;
             string[] OuterTable = RawTable.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string sLine in OuterTable)
             {
                 cCreditInfo ci = new cCreditInfo();
                 string[] RawLines = sLine.Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
+                if(RawLines.Length < 9)
+                {
+                    break;
+                }
                 s = RawLines[4];
                 if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dateTime1))
                 {
                     ci.tCompleted = dateTime1;
+                    if (ci.tCompleted == DateTime.MinValue)
+                    {
+                        break;
+                    }
+                    UnsortedDT.Add(ci.tCompleted);
                 }
                 else
                 {
-                    return 0;
+                    break;
                 }
                 int i = RawLines[6].LastIndexOf(">");
                 s = RawLines[6].Substring(i + 1);
@@ -592,9 +602,11 @@ namespace CreditStatistics
                 ci.mCPU = ci.Credits / ci.CPUtimeSecs;
                 mCPU.Add(ci.mCPU);
                 ci.bValid = true;   // do not really know if it is valid yet
-                LCreditInfo.Add(ci);
+                UnsortedLCI.Add(ci);
+                WUs++;
             }
-            return 0;
+            RunDTsort();
+            return WUs;
         }
 
         public void GetTableFromNoHeader(ref cNoHeaderProj noHeaderProj)

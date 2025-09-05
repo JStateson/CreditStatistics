@@ -30,7 +30,9 @@ namespace CreditStatistics
     {
         public string ProjectName;  // cpdn, lhc, etc
         public string ProjectsID;   // the ID given by the project to the PC
+        public string LastStudyID;
         public int IndexToProjectList; // the index in the projectlist of the project associated with the ProjectName
+        public bool HasAppConfig;
     }
 
     internal class cHostInfo
@@ -50,14 +52,39 @@ namespace CreditStatistics
         public bool SSHvalid;
         public bool BOINCvalid;
         public List<cLHe> LocalProjID = new List<cLHe>();
+
+        public cLHe GetLocalProjectInfo(string shortname)
+        {
+            foreach (cLHe lh in LocalProjID)
+            {
+                if (lh.ProjectName == shortname) return lh;
+            }
+            //Debug.Assert(false, "cannot find " + shortname + " in LocalProjID");
+            return null;
+        }
+
         public string GetProjectID(string shortname)
         {
-            foreach(cLHe lh in LocalProjID)
-            {
-                if (lh.ProjectName == shortname) return lh.ProjectsID;
-            }
-            Debug.Assert(false, "cannot find " + shortname + " in LocalProjID");
-            return "";
+            cLHe lh = GetLocalProjectInfo(shortname);
+            if (lh == null) return "";
+            return lh.ProjectsID;
+        }
+
+        public string GetLastStudy(string shortname)
+        {
+            cLHe lh = GetLocalProjectInfo(shortname);
+            if(lh == null)return "";
+            return lh.LastStudyID;
+        }
+
+        // return true if updated
+        public bool UpdateLastStudy(string shortname, string sStudyV)
+        {
+            if (shortname == "" || sStudyV == "") return false;
+            cLHe lh = GetLocalProjectInfo(shortname);
+            if(lh == null)return false;
+            lh.LastStudyID = sStudyV;
+            return true;
         }
     }
 
@@ -67,6 +94,7 @@ namespace CreditStatistics
         public int[] nPorts  = new int[3] {31416, 22,-1};
         public bool UseRadioButtons = false;
         public bool PerformScan = false;
+        public bool ColorAppConfig = false;   // colors red if does not have HasAppConfigl else color using sprint enabled
     }
 
     internal class CSendNotepad
@@ -117,6 +145,7 @@ namespace CreditStatistics
         public static string WhereCurrentDefaultPandoraConfig = "DEFAULT_PANDORA_CONFIG.txt";
         public static string WhereCurrentDefaultCC_config = "DEFAULT_CC_CONFIG.txt";
         public static string WhereProjectAccessParams = "Proj_Access_Params.xml";
+        public static string WhereAppVersions = "PROJ_APP_VERSIONS.cfg";
         public static int ERR_none = 0;
         public static int ERR_info = 1;
         public static int ERR_warning = 2;
@@ -137,152 +166,161 @@ namespace CreditStatistics
             return strIn + "                              ".Substring(0, i);
         }
 
-
-/*
-
-        public static string xRunScpAndGetOutput(ref cPClimit PCl, string sLocalFile, string sRemoteFile, bool IsLinux, string CK)
+        public static void AppendColoredText(RichTextBox box, string text, Color color)
         {
-            //if (PCl.IsLocalhost()) return "";
-            string Argument = "";
-            string remoteUser = PCl.UserName;
-            string remoteHost = PCl.PCname;
-            string ck = "/" + CK;
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+            box.SelectionColor = color;
+            box.AppendText(text);
+            box.SelectionColor = box.ForeColor;
+            box.ScrollToCaret();
+        }
 
-            if (PCl.IsLocalhost())  //local pc is windows and there is no SSH server
-            {
-                try
+        /*
+
+                public static string xRunScpAndGetOutput(ref cPClimit PCl, string sLocalFile, string sRemoteFile, bool IsLinux, string CK)
                 {
-                    string stemp = File.ReadAllText(sLocalFile);
-                    File.WriteAllText(sRemoteFile, stemp);                    
-                }
-                catch(Exception e)
-                {
-                    return "Error transfering file " + sLocalFile + Environment.NewLine;
-                }
+                    //if (PCl.IsLocalhost()) return "";
+                    string Argument = "";
+                    string remoteUser = PCl.UserName;
+                    string remoteHost = PCl.PCname;
+                    string ck = "/" + CK;
 
-                return sLocalFile + " copied to " + sRemoteFile + Environment.NewLine;
-            }
-
-
-            if (IsLinux)
-            {
-                Argument = ck + $" scp {sLocalFile}  {remoteUser}@{remoteHost}:{sRemoteFile}";
-            }
-            else
-            {
-                Argument =  ck + $" scp {sLocalFile}  {remoteHost}:{sRemoteFile}";
-            }
-
-            bool bRedirect = CK == "c"; // if c then redirect output, else just run command
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = Argument,
-                RedirectStandardOutput = bRedirect,
-                RedirectStandardError = bRedirect,
-                RedirectStandardInput = bRedirect,
-                UseShellExecute = !bRedirect,
-                CreateNoWindow = bRedirect
-            };
-
-            using (var process = Process.Start(psi))
-            {
-                if (bRedirect)
-                {
-                    string output = process.StandardOutput.ReadToEnd().Trim();
-                    string error = process.StandardError.ReadToEnd().Trim();
-                    process.WaitForExit();
-
-                    // Check for SSH failure only (e.g., network issues, bad command, does not exist)
-                    if (process.ExitCode == 255 || output == "" && error != "")
+                    if (PCl.IsLocalhost())  //local pc is windows and there is no SSH server
                     {
-                        MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
+                        try
+                        {
+                            string stemp = File.ReadAllText(sLocalFile);
+                            File.WriteAllText(sRemoteFile, stemp);                    
+                        }
+                        catch(Exception e)
+                        {
+                            return "Error transfering file " + sLocalFile + Environment.NewLine;
+                        }
+
+                        return sLocalFile + " copied to " + sRemoteFile + Environment.NewLine;
                     }
-                    return output.Trim(); // Strip newline characters
-                }
-            }
-            return "";
-
-        }
-
-        public static void xRemovePandora(ref cPClimit PCl)
-        {
-            bool bIsLinux = PCl.OStype != "w";
-            string sCommand = "";
-
-            if (bIsLinux)
-            {
-                sCommand = "sudo rm -f /var/lib/boinc/pandora_config";
-            }
-            else
-            {
-                sCommand = "\"del \\ProgramData\\boinc\\pandora_config\"";
-            }
-
-            if (!PCl.IsLocalhost())
-            {
-                xRunSshAndGetOutput(ref PCl, sCommand, bIsLinux, "c");
-            }
-            else
-            {
-                File.Delete("C:\\ProgramData\\boinc\\pandora_config");
-            }
-        }
 
 
-
-        public static string xRunSshAndGetOutput(ref cPClimit PCl, string remoteCommand, bool IsLinux, string CK)
-        {
-            if (PCl.IsLocalhost()) return "";
-            string Argument = "";
-            string remoteUser = PCl.UserName;
-            string remoteHost = PCl.PCname;
-            string ck = "/" + CK;
-            if (IsLinux)
-            {
-                Argument = remoteUser == "" ? ck + $" ssh {remoteHost} \"{remoteCommand}\"" :
-                            ck + $" ssh {remoteUser}@{remoteHost} \"{remoteCommand}\"";
-            }
-            else
-            {
-                Argument = remoteUser == "" ? ck + $" ssh {remoteHost} {remoteCommand}" :
-                    ck + $" ssh {remoteUser}@{remoteHost} {remoteCommand}";
-            }
-
-            bool bRedirect = CK == "c"; // if c then redirect output, else just run command
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = Argument,
-                RedirectStandardOutput = bRedirect,
-                RedirectStandardError = bRedirect,
-                RedirectStandardInput = bRedirect,
-                UseShellExecute = !bRedirect,
-                CreateNoWindow = bRedirect
-            };
-
-            using (var process = Process.Start(psi))
-            {
-                if (bRedirect)
-                {
-                    string output = process.StandardOutput.ReadToEnd().Trim();
-                    string error = process.StandardError.ReadToEnd().Trim();
-                    process.WaitForExit();
-
-                    // Check for SSH failure only (e.g., network issues, bad command, does not exist)
-                    if (process.ExitCode == 255 || output == "" && error != "")
+                    if (IsLinux)
                     {
-                        MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
+                        Argument = ck + $" scp {sLocalFile}  {remoteUser}@{remoteHost}:{sRemoteFile}";
                     }
-                    return output.Trim(); // Strip newline characters
-                }
-            }
-            return "";
-        }
+                    else
+                    {
+                        Argument =  ck + $" scp {sLocalFile}  {remoteHost}:{sRemoteFile}";
+                    }
 
-    */
+                    bool bRedirect = CK == "c"; // if c then redirect output, else just run command
+
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = Argument,
+                        RedirectStandardOutput = bRedirect,
+                        RedirectStandardError = bRedirect,
+                        RedirectStandardInput = bRedirect,
+                        UseShellExecute = !bRedirect,
+                        CreateNoWindow = bRedirect
+                    };
+
+                    using (var process = Process.Start(psi))
+                    {
+                        if (bRedirect)
+                        {
+                            string output = process.StandardOutput.ReadToEnd().Trim();
+                            string error = process.StandardError.ReadToEnd().Trim();
+                            process.WaitForExit();
+
+                            // Check for SSH failure only (e.g., network issues, bad command, does not exist)
+                            if (process.ExitCode == 255 || output == "" && error != "")
+                            {
+                                MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
+                            }
+                            return output.Trim(); // Strip newline characters
+                        }
+                    }
+                    return "";
+
+                }
+
+                public static void xRemovePandora(ref cPClimit PCl)
+                {
+                    bool bIsLinux = PCl.OStype != "w";
+                    string sCommand = "";
+
+                    if (bIsLinux)
+                    {
+                        sCommand = "sudo rm -f /var/lib/boinc/pandora_config";
+                    }
+                    else
+                    {
+                        sCommand = "\"del \\ProgramData\\boinc\\pandora_config\"";
+                    }
+
+                    if (!PCl.IsLocalhost())
+                    {
+                        xRunSshAndGetOutput(ref PCl, sCommand, bIsLinux, "c");
+                    }
+                    else
+                    {
+                        File.Delete("C:\\ProgramData\\boinc\\pandora_config");
+                    }
+                }
+
+
+
+                public static string xRunSshAndGetOutput(ref cPClimit PCl, string remoteCommand, bool IsLinux, string CK)
+                {
+                    if (PCl.IsLocalhost()) return "";
+                    string Argument = "";
+                    string remoteUser = PCl.UserName;
+                    string remoteHost = PCl.PCname;
+                    string ck = "/" + CK;
+                    if (IsLinux)
+                    {
+                        Argument = remoteUser == "" ? ck + $" ssh {remoteHost} \"{remoteCommand}\"" :
+                                    ck + $" ssh {remoteUser}@{remoteHost} \"{remoteCommand}\"";
+                    }
+                    else
+                    {
+                        Argument = remoteUser == "" ? ck + $" ssh {remoteHost} {remoteCommand}" :
+                            ck + $" ssh {remoteUser}@{remoteHost} {remoteCommand}";
+                    }
+
+                    bool bRedirect = CK == "c"; // if c then redirect output, else just run command
+
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = Argument,
+                        RedirectStandardOutput = bRedirect,
+                        RedirectStandardError = bRedirect,
+                        RedirectStandardInput = bRedirect,
+                        UseShellExecute = !bRedirect,
+                        CreateNoWindow = bRedirect
+                    };
+
+                    using (var process = Process.Start(psi))
+                    {
+                        if (bRedirect)
+                        {
+                            string output = process.StandardOutput.ReadToEnd().Trim();
+                            string error = process.StandardError.ReadToEnd().Trim();
+                            process.WaitForExit();
+
+                            // Check for SSH failure only (e.g., network issues, bad command, does not exist)
+                            if (process.ExitCode == 255 || output == "" && error != "")
+                            {
+                                MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
+                            }
+                            return output.Trim(); // Strip newline characters
+                        }
+                    }
+                    return "";
+                }
+
+            */
         public static string NewLineToLinux(string input)
         {
             return input.Replace("\r\n", "\n");
@@ -451,20 +489,64 @@ namespace CreditStatistics
                 File.WriteAllLines(Pathname, cc_config);
         }
 
-        public static string WriteACrecord(string PCname, string ProjName, ref string[] app_config)
+        public static string GetAppConfigFilename(string PCname, string ProjName)
         {
-            string Pathname = WhereDOC + "\\app_config_" + ProjName + "_" + PCname + ".xml";
+            return WhereDOC + "\\app_config_" + PCname + "_" + ProjName + ".xml";
+        }
+
+        public static string WriteACrecord(string ACpathname, ref string[] app_config)
+        {
             try
             {
                 if (app_config != null)
-                    File.WriteAllLines(Pathname, app_config);
+                    File.WriteAllLines(ACpathname, app_config);
                 else return "ERROR: expected data, but found NULL" + Environment.NewLine;
             }
             catch (Exception e)
             {
                 return "ERROR: " + e.Message + Environment.NewLine;
             }
-            return Pathname + " was written " + Environment.NewLine;
+            return ACpathname + " was written " + Environment.NewLine;
+        }
+
+        public static string[] ReadACrecord(string PCname, string ProjName, out bool IsDefault)
+        {
+            string Pathname = GetAppConfigFilename (PCname, ProjName);
+            IsDefault = false;
+            try
+            {
+                if(File.Exists(Pathname))
+                {
+                    string sTemp = File.ReadAllText(Pathname);
+                    IsDefault = sTemp.Contains("default app_config");
+                    return File.ReadAllLines(Pathname);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("ERROR: " + e.Message);
+            }
+            return null;
+        }
+
+        public static string ReadACstring(string PCname, string ProjName, out bool IsDefault)
+        {
+            string Pathname = GetAppConfigFilename(PCname, ProjName);
+            IsDefault = false;
+            try
+            {
+                if (File.Exists(Pathname))
+                {
+                    string sTemp = File.ReadAllText(Pathname);
+                    IsDefault = sTemp.Contains("default app_config");
+                    return sTemp;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("ERROR: " + e.Message);
+            }
+            return "";
         }
 
         public static string[] ReadCCrecord(string PCname)
@@ -867,6 +949,7 @@ namespace CreditStatistics
             public List<string> HostProjIDs = new List<string>(); // the ID of the pc
             public List<string> HostPCNames = new List<string>();
             public List<string> AppID = new List<string>(); // some projects list the applications in the xml files
+            public List<string> AppConfigVersions;
             public void AddHosts(string sHostIDs)
             {
                 if (sHostIDs == "") return;
@@ -909,6 +992,18 @@ namespace CreditStatistics
             public string CurrentStudy;
             public List<string> AvailableStudies = new List<string>();
             public List<cProjectStudiesInfo> psi = new List<cProjectStudiesInfo>();
+
+            public int GetStudyIndex(string sID)
+            {
+                int i = 0;
+                foreach(string s in AvailableStudies)
+                {
+                    string[] ss=s.Split(':');
+                    if (ss[0].Trim() == sID) return i;
+                    i++;
+                }
+                return 0;
+            }
 
             public void GetStudyUsingName(string shortname)
             {
@@ -1076,20 +1171,25 @@ namespace CreditStatistics
                 
 
                 cProjectStudiesInfo PCIforSN = null;
-
+                iPS = -1;
                 if (StudyConfigFile != null)
                 {
                     foreach (string s in StudyConfigFile) // may not be in the same order as the projectlist
                     {
-                        string[] quad = s.Split(','); // 5 items now
+                        iPS++;
+                        string[] quad = s.Split(','); // 8 items now and cannot ignore nulls
                         int n = quad.Length;
                         string ShortName = quad[0];
                         PCIforSN = ThisPSI(ShortName);
                         cStudyIDsDue sid = new cStudyIDsDue();
                         sid.sStudy = quad[1];
+                        if (sid.sStudy == "")
+                            sid.sStudy = "0";
                         int iLoc = ProjectStats.ShortnameToIndex(ShortName);
                         ProjectStats.ProjectList[iLoc].sStudyL += sid.sStudy + " ";
                         sid.sStudyName = quad[2];
+                        if(sid.sStudyName == "")
+                            sid.sStudyName = "unknown";
                         sid.nItems = Convert.ToInt32(quad[3]);
                         sid.nDueDuration = Math.Abs(Convert.ToInt32(quad[4]));
                         sid.CPUsUsed = Convert.ToDouble(quad[5]);

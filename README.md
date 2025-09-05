@@ -4,8 +4,6 @@
 
 The CreditStatistics app works with BOINC and BoincTasks to obtain statistics from websites, control local PCs and manage competitions
 
-Download any 7z binaries to get both the release and debug versions of CreditStatistics
-
 To reset the app, run the app by entering 'CreditStatistics.exe reset'
 
 BoincTasks is needed only to obtain the list of remote PCs
@@ -17,3 +15,4 @@ Remote PCs are access over ports 31416 and 22 so you must have Boinc.exe running
 Website are scraped using Microsoft's Playwright to avoid bot blocks.  Currently, only BOINC websites CPDN and PrimeGrid require credentials.
 
 OpenSSH is needed for control of remote PCs.  Private repository BOINC830Pandora has notes on this.
+

@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Platforms>AnyCPU;x64</Platforms>
     <StartupObject>CreditStatistics.Program</StartupObject>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
 <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

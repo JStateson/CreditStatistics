@@ -28,14 +28,16 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OnlinePCReport));
             btnSSHconnect = new Button();
             btnExit = new Button();
+            label3 = new Label();
             SuspendLayout();
             // 
             // btnSSHconnect
             // 
             btnSSHconnect.ForeColor = SystemColors.Highlight;
-            btnSSHconnect.Location = new Point(295, 208);
+            btnSSHconnect.Location = new Point(333, 268);
             btnSSHconnect.Name = "btnSSHconnect";
             btnSSHconnect.Size = new Size(103, 66);
             btnSSHconnect.TabIndex = 15;
@@ -47,7 +49,7 @@
             // 
             btnExit.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnExit.ForeColor = SystemColors.Highlight;
-            btnExit.Location = new Point(305, 410);
+            btnExit.Location = new Point(343, 416);
             btnExit.Name = "btnExit";
             btnExit.Size = new Size(75, 31);
             btnExit.TabIndex = 16;
@@ -55,17 +57,29 @@
             btnExit.UseVisualStyleBackColor = true;
             btnExit.Click += btnExit_Click;
             // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.BackColor = SystemColors.Info;
+            label3.Location = new Point(289, 59);
+            label3.Name = "label3";
+            label3.Size = new Size(208, 165);
+            label3.TabIndex = 17;
+            label3.Text = resources.GetString("label3.Text");
+            // 
             // OnlinePCReport
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(461, 598);
+            ClientSize = new Size(524, 598);
+            Controls.Add(label3);
             Controls.Add(btnExit);
             Controls.Add(btnSSHconnect);
             Name = "OnlinePCReport";
             Text = "OnlinePCReport";
             Controls.SetChildIndex(btnSSHconnect, 0);
             Controls.SetChildIndex(btnExit, 0);
+            Controls.SetChildIndex(label3, 0);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -74,5 +88,6 @@
 
         private Button btnSSHconnect;
         private Button btnExit;
+        private Label label3;
     }
 }

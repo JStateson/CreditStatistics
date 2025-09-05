@@ -117,17 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label3.Text" xml:space="preserve">
-    <value>First time startup:  You may be asked
-to enter Yes, No, or a fingerprint.
-You only need to enter Yes if you 
-placed your SSH credentials on the
-remote PC.  If after entering Yes, you
-are asked for a password then you
-need to enter the username and 
-possibly a password.  Bring up the
-form Find projects and PCs and enter
-your usersname and try again. If that
-does not work then add the password.</value>
+  <metadata name="ProjName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="HasApp.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="sCnt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="AppVersion.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="label1.Text" xml:space="preserve">
+    <value>To obtain a list of possible app_configs this form will save existing app
+configs, replace them with a dummy app config,restart BOINC,
+obtain a list of app versions, then restore the original app_configs</value>
   </data>
 </root>

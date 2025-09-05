@@ -4,6 +4,7 @@ using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
@@ -41,8 +42,10 @@ namespace CreditStatistics
         public bool CurrentSSHvalid;
         public bool CurrentBOINCvalid;
         public string sVersion;
+        public List<string> LastStudyIDselected = new List<string>();
         public List<string> AvailableProjectIDs = new List<string>();
         public List<string> MatchingShortnames = new List<string>();
+        public List<bool>HasAppConfig = new List<bool>();
         public PandoraRPC rpc = new PandoraRPC();
 
         public string Init(ref cProjectStruct ProjectStats)
@@ -128,6 +131,7 @@ namespace CreditStatistics
                     sRtn += "!!Missing master url for project " + ProjectStats.ProjectList[i].name + Environment.NewLine;
                 }
             }
+
             TryFormMasterPandora(ref MasterUrls);
 
             int ProcessorCount = Environment.ProcessorCount;
@@ -149,6 +153,12 @@ namespace CreditStatistics
             hi.Password = "";
             SelectCurrentFromIndex(0);
             return sRtn;
+        }
+
+        public void ChangeStudy(string PCname, string shortname, string sStudy)
+        {
+            cHostInfo hi = NameToSystem(PCname);
+            
         }
 
         public string RunScpAndGetOutput(string PCname, string sLocalFile, string sRemoteFile, string CK)
@@ -411,6 +421,7 @@ namespace CreditStatistics
             else
             {
                 string sResult = ContactPCproject(PCname, " --quit", "");
+                if (ErrorStatus != 0) return;
                 System.Threading.Thread.Sleep(10000);
                 sResult = globals.BoincCommand("boinc.exe", " --detach --allow_remote_gui_rpc");
             }
@@ -508,6 +519,7 @@ namespace CreditStatistics
             return "";
         }
 
+ 
         public Color GetColor(string PCname)
         {
             cHostInfo hi = NameToSystem(PCname);
@@ -571,7 +583,7 @@ namespace CreditStatistics
                 sOut += hi.ComputerID + ":";
                 foreach (cLHe lh in hi.LocalProjID)
                 {
-                    sOut += lh.ProjectName + " " + lh.ProjectsID + ",";
+                    sOut += lh.ProjectName + " " + lh.ProjectsID + " " + lh.LastStudyID + " " + (lh.HasAppConfig ? "1" : "0") +  ",";
                 }
                 sOut = sOut.Substring(0, sOut.Length - 1) + Environment.NewLine;
             }
@@ -603,7 +615,7 @@ namespace CreditStatistics
             return hInfo;
         }
 
-        public cHostInfo AddProj(string pcName, string shortName, string projectID, int iLoc)
+        public cHostInfo AddProj(string pcName, string shortName, string projectID, int iLoc, string LastStudyID, bool HasAppConfig)
         {
             cLHe clex;
             foreach (cHostInfo hInfo in LocalSystems)
@@ -620,7 +632,9 @@ namespace CreditStatistics
                     clex = new cLHe();
                     clex.ProjectName = shortName;
                     clex.ProjectsID = projectID;
+                    clex.LastStudyID = LastStudyID;
                     clex.IndexToProjectList = iLoc;
+                    clex.HasAppConfig = HasAppConfig;
                     hInfo.LocalProjID.Add(clex); // todo to do must not add same one
                     return hInfo;
                 }
@@ -632,7 +646,9 @@ namespace CreditStatistics
             clex = new cLHe();
             clex.ProjectName = shortName;
             clex.ProjectsID = projectID;
+            clex.LastStudyID = LastStudyID;
             clex.IndexToProjectList = iLoc;
+            clex.HasAppConfig = HasAppConfig;
             hi.LocalProjID.Add(clex); // todo to do must not add same one
             LocalSystems.Add(hi);
             return hi;
@@ -661,6 +677,8 @@ namespace CreditStatistics
             CurrentComputerID = LocalSystems[n].ComputerID;
             AvailableProjectIDs.Clear();
             MatchingShortnames.Clear();
+            HasAppConfig.Clear();
+            LastStudyIDselected.Clear();
             cHostInfo hInfo = LocalSystems[n];
             CurrentProcessorCount = hInfo.ProcessorCount;
             CurrentGPUcount = hInfo.GPUcount;
@@ -677,6 +695,8 @@ namespace CreditStatistics
             {
                 AvailableProjectIDs.Add(cle.ProjectsID);
                 MatchingShortnames.Add(cle.ProjectName);
+                HasAppConfig.Add(cle.HasAppConfig);
+                LastStudyIDselected.Add(cle.LastStudyID);
             }
         }
 
@@ -687,6 +707,8 @@ namespace CreditStatistics
             CurrentComputerID = pcName;
             AvailableProjectIDs.Clear();
             MatchingShortnames.Clear();
+            LastStudyIDselected.Clear();
+            HasAppConfig.Clear();
 
             foreach (cHostInfo hInfo in LocalSystems)
             {
@@ -709,6 +731,8 @@ namespace CreditStatistics
                     {
                         AvailableProjectIDs.Add(cle.ProjectsID);
                         MatchingShortnames.Add(cle.ProjectName);
+                        HasAppConfig.Add(cle.HasAppConfig);
+                        LastStudyIDselected.Add(cle.LastStudyID);
                     }
                     return;
                 }

@@ -279,13 +279,6 @@ namespace CreditStatistics
         }
 
 
-        // Change the signature of sendPCproject in cManagedPCs from:
-        // public void sendPCproject(string PCname, string sCmd, string MasterUrl);
-        // to:
-        // public async Task sendPCproject(string PCname, string sCmd, string MasterUrl);
-
-        // Then, in CtrlRemotePCs.cs, update the usage as follows:
-
         private async void ContactPCs(string sCmd)
         {
             foreach (cPClimit PC in PandoraDatabase)
@@ -294,9 +287,9 @@ namespace CreditStatistics
                 cHostInfo hi = ManagedPCs.NameToSystem(PC.PCname);
                 await ManagedPCs.sendPCproject(PC.PCname, sCmd, MasterUrl);
                 Application.DoEvents();
-                await Task.Delay(500);
-                if (PC.ErrorStatus != 0) hi.HasBOINC = false;
-                IsStillOnline(PC.PCname, true, "BOINC");
+                await Task.Delay(1000);
+                if (PC.ErrorStatus > ERR_warning) hi.HasBOINC = false;
+                IsStillOnline(PC.PCname, true, PC.ErrorStatus == 0);
             }
         }
 
@@ -382,7 +375,7 @@ namespace CreditStatistics
                         sArgs = "--host " + PC.PCname + " --project " + GameUrl + " " + sCmd;
                     string sResult = globals.BoincCommand("boinccmd.exe", sArgs);
                     */
-                    IsStillOnline(PC.PCname, true, "BOINC");
+                    IsStillOnline(PC.PCname, true, PC.ErrorStatus == 0);
                     sOut += sResult;
                     ThisRB.ForeColor = rbColor;
                     if (LastRB != null) LastRB.ForeColor = Color.Black;

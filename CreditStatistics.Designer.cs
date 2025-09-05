@@ -32,8 +32,10 @@
             contextMenuStrip1 = new ContextMenuStrip(components);
             menuStrip1 = new MenuStrip();
             settingsToolStripMenuItem = new ToolStripMenuItem();
-            getStudyInfoToolStripMenuItem = new ToolStripMenuItem();
             findOtherPCsToolStripMenuItem = new ToolStripMenuItem();
+            getStudyInfoToolStripMenuItem = new ToolStripMenuItem();
+            getAllConfigFilesToolStripMenuItem = new ToolStripMenuItem();
+            passwordInfoToolStripMenuItem = new ToolStripMenuItem();
             runOptionsToolStripMenuItem = new ToolStripMenuItem();
             runMultiple = new ToolStripMenuItem();
             ContactProject = new ToolStripMenuItem();
@@ -69,6 +71,7 @@
             gbSamURL = new GroupBox();
             tbProjUrl = new TextBox();
             label1 = new Label();
+            toolStripMenuItem1 = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -90,24 +93,38 @@
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { findOtherPCsToolStripMenuItem, getStudyInfoToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { findOtherPCsToolStripMenuItem, getStudyInfoToolStripMenuItem, toolStripMenuItem1, getAllConfigFilesToolStripMenuItem, passwordInfoToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(49, 20);
             settingsToolStripMenuItem.Text = "Setup";
             // 
-            // getStudyInfoToolStripMenuItem
-            // 
-            getStudyInfoToolStripMenuItem.Name = "getStudyInfoToolStripMenuItem";
-            getStudyInfoToolStripMenuItem.Size = new Size(188, 22);
-            getStudyInfoToolStripMenuItem.Text = "Get Study Info";
-            getStudyInfoToolStripMenuItem.Click += getStudyInfoToolStripMenuItem_Click;
-            // 
             // findOtherPCsToolStripMenuItem
             // 
             findOtherPCsToolStripMenuItem.Name = "findOtherPCsToolStripMenuItem";
-            findOtherPCsToolStripMenuItem.Size = new Size(188, 22);
+            findOtherPCsToolStripMenuItem.Size = new Size(204, 22);
             findOtherPCsToolStripMenuItem.Text = "Find Projects and PCs";
             findOtherPCsToolStripMenuItem.Click += findOtherPCsToolStripMenuItem_Click;
+            // 
+            // getStudyInfoToolStripMenuItem
+            // 
+            getStudyInfoToolStripMenuItem.Name = "getStudyInfoToolStripMenuItem";
+            getStudyInfoToolStripMenuItem.Size = new Size(204, 22);
+            getStudyInfoToolStripMenuItem.Text = "Get Study Info";
+            getStudyInfoToolStripMenuItem.Click += getStudyInfoToolStripMenuItem_Click;
+            // 
+            // getAllConfigFilesToolStripMenuItem
+            // 
+            getAllConfigFilesToolStripMenuItem.Name = "getAllConfigFilesToolStripMenuItem";
+            getAllConfigFilesToolStripMenuItem.Size = new Size(204, 22);
+            getAllConfigFilesToolStripMenuItem.Text = " View app versions";
+            getAllConfigFilesToolStripMenuItem.Click += getAllConfigFilesToolStripMenuItem_Click;
+            // 
+            // passwordInfoToolStripMenuItem
+            // 
+            passwordInfoToolStripMenuItem.Name = "passwordInfoToolStripMenuItem";
+            passwordInfoToolStripMenuItem.Size = new Size(204, 22);
+            passwordInfoToolStripMenuItem.Text = "Password Info";
+            passwordInfoToolStripMenuItem.Click += passwordInfoToolStripMenuItem_Click;
             // 
             // runOptionsToolStripMenuItem
             // 
@@ -428,6 +445,13 @@
             label1.TabIndex = 0;
             label1.Text = "Paste your URL in below box and click RUN to get\r\nstatistics.  The URL must contain the phrase HOST\r\nAlternately select a project and it's study.\r\n";
             // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new Size(204, 22);
+            toolStripMenuItem1.Text = "View/Edit all app configs";
+            toolStripMenuItem1.Click += toolStripMenuItem1_Click;
+            // 
             // CreditStatistics
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -440,6 +464,7 @@
             MaximizeBox = false;
             Name = "CreditStatistics";
             Text = "Credit Statistics";
+            FormClosing += CreditStatistics_FormClosing;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             groupBox1.ResumeLayout(false);
@@ -491,5 +516,8 @@
         private ToolStripMenuItem ShowPandoraMenuItem;
         private ToolStripMenuItem showEditAppConfigToolStripMenuItem;
         private ToolStripMenuItem whatToolStripMenuItem;
+        private ToolStripMenuItem passwordInfoToolStripMenuItem;
+        private ToolStripMenuItem getAllConfigFilesToolStripMenuItem;
+        private ToolStripMenuItem toolStripMenuItem1;
     }
 }

@@ -41,6 +41,7 @@
             label3 = new Label();
             tbInfo = new TextBox();
             toolTip1 = new ToolTip(components);
+            btnScanData = new Button();
             ((System.ComponentModel.ISupportInitialize)dgv).BeginInit();
             SuspendLayout();
             // 
@@ -166,17 +167,30 @@
             // 
             // tbInfo
             // 
-            tbInfo.Location = new Point(1271, 51);
+            tbInfo.Location = new Point(1228, 51);
             tbInfo.Multiline = true;
             tbInfo.Name = "tbInfo";
-            tbInfo.Size = new Size(171, 287);
+            tbInfo.Size = new Size(214, 287);
             tbInfo.TabIndex = 27;
+            // 
+            // btnScanData
+            // 
+            btnScanData.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnScanData.Location = new Point(382, 477);
+            btnScanData.Margin = new Padding(4, 3, 4, 3);
+            btnScanData.Name = "btnScanData";
+            btnScanData.Size = new Size(153, 58);
+            btnScanData.TabIndex = 28;
+            btnScanData.Text = "Click to re-acquire\r\ntasking infomation";
+            btnScanData.UseVisualStyleBackColor = true;
+            btnScanData.Click += btnScanData_Click;
             // 
             // ShowBunkeredWUs
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1475, 617);
+            Controls.Add(btnScanData);
             Controls.Add(tbInfo);
             Controls.Add(label3);
             Controls.Add(btnBacklog);
@@ -187,6 +201,7 @@
             Controls.Add(btnSuccess);
             Controls.Add(label2);
             Controls.Add(dgv);
+            ForeColor = SystemColors.HotTrack;
             Name = "ShowBunkeredWUs";
             Text = "ShowBunkeredWUs";
             Controls.SetChildIndex(dgv, 0);
@@ -199,6 +214,7 @@
             Controls.SetChildIndex(btnBacklog, 0);
             Controls.SetChildIndex(label3, 0);
             Controls.SetChildIndex(tbInfo, 0);
+            Controls.SetChildIndex(btnScanData, 0);
             ((System.ComponentModel.ISupportInitialize)dgv).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -218,5 +234,6 @@
         private Label label3;
         private TextBox tbInfo;
         private ToolTip toolTip1;
+        private Button btnScanData;
     }
 }

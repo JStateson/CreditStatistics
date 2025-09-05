@@ -4,6 +4,7 @@ using Microsoft.VisualBasic.Devices;
 using Microsoft.Win32;
 using System.CodeDom.Compiler;
 using System.Collections.Specialized;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Net;
@@ -32,11 +33,14 @@ namespace CreditStatistics
         {
             InitializeComponent();
             globals.WhereEXE = AppContext.BaseDirectory.ToString();
+
             int i = globals.WhereEXE.IndexOf("\\Release");
             if (i < 0)
                 i = globals.WhereEXE.IndexOf("\\Debug");
             globals.WhereDOC = globals.WhereEXE.Substring(0, i) + "\\Release";
             globals.WhereEXE = globals.WhereDOC;
+
+            MessageBox.Show("Documents are here: " + globals.WhereEXE);
 
             if (args.Length > 0)
             {
@@ -137,6 +141,7 @@ namespace CreditStatistics
 
         private void UpdateRB()
         {
+            RadioButton rbSelected;
             foreach (Control c in gbSamURL.Controls)
             {
                 if (c is RadioButton)
@@ -148,6 +153,11 @@ namespace CreditStatistics
                     bool bHasID = ProjID != "";
                     //rb.ForeColor = bHasID ? System.Drawing.Color.Blue : System.Drawing.Color.Red;
                     rb.Enabled = bHasID;
+                    if (rb.Checked)
+                    {
+                        btnGetData.Enabled = rb.Enabled;
+                        cbStudyAvail.Enabled = rb.Enabled;
+                    }
                 }
             }
         }
@@ -160,9 +170,20 @@ namespace CreditStatistics
             tbProjUrl.Text = PSl.FormURL(sProjname);
         }
 
-        private void RBchanged()
+        private void SetLastStudy(string shortname, string PCname)
         {
-
+            if (PCname == "") return;
+            string LastStudy = ManagedPCs.NameToSystem(PCname).GetLastStudy(shortname);
+            if (LastStudy == "")
+                cbStudyAvail.SelectedIndex = 0;
+            else
+            {
+                int i = ProjectStudyDB.GetStudyIndex(LastStudy);
+                if (i >= 0)
+                    cbStudyAvail.SelectedIndex = i;
+                else
+                    cbStudyAvail.SelectedIndex = 0;
+            }
         }
 
         private void ApplyName()
@@ -196,6 +217,7 @@ namespace CreditStatistics
             {
                 return;
             }
+            btnGetData.Enabled = rb.Enabled;
             TagOfProject = (int)rb.Tag;
             ProjectStats.ProjectList[TagOfProject].IsSelected = true;
 
@@ -207,14 +229,17 @@ namespace CreditStatistics
             cbStudyAvail.SelectedIndex = -1;
             ProjectStudyDB.GetStudyUsingName(rb.Text);
             cbStudyAvail.DataSource = ProjectStudyDB.AvailableStudies;
-            cbStudyAvail.SelectedIndex = 0;
+            string shortname = rb.Text.ToString();
+            tbProjID.Text = ManagedPCs.ProjectIDfromPCsShortname(shortname);
+            string PCname = cbPCavail.Text;
+            SetLastStudy(shortname, PCname);
             cbStudyAvail.SelectedIndexChanged += cbStudyAvail_SelectedIndexChanged;
-            tbProjID.Text = ManagedPCs.ProjectIDfromPCsShortname(rb.Text.ToString());
+
             tbStudyID.Text = ProjectStudyDB.CurrentStudy;
-            PCchanged();
+            ProjectChanged();
         }
 
-        private void PCchanged()
+        private void ProjectChanged()
         {
             string Shortname = ProjectStats.ShortName(TagOfProject);
             tbProjID.Text = ManagedPCs.ProjectIDfromPCsShortname(Shortname);
@@ -240,6 +265,10 @@ namespace CreditStatistics
             ProjectStudyDB.CurrentStudy = sID[0];
             ProjectStats.ProjectList[TagOfProject].sStudyV = sID[0];
             tbStudyID.Text = sID[0];
+            string PCname = cbPCavail.Text;
+            string shortname = ProjectStats.ShortName(TagOfProject);
+            if (PCname != "")
+                ManagedPCs.NameToSystem(PCname).UpdateLastStudy(shortname, tbStudyID.Text);
             FormUrlFromChange();
         }
 
@@ -275,7 +304,7 @@ namespace CreditStatistics
             string PCname = cbPCavail.SelectedItem.ToString();
             ManagedPCs.SelectCurrentFromPC(PCname);
             UpdateRB();
-            PCchanged();
+            ProjectChanged();
         }
 
         private void runMultiple_Click(object sender, EventArgs e)
@@ -482,7 +511,6 @@ namespace CreditStatistics
             }
         }
 
-
         private void btnViewPage_Click(object sender, EventArgs e)
         {
             globals.OpenUrl(tbProjUrl.Text);
@@ -493,7 +521,7 @@ namespace CreditStatistics
             ReqCmds reqCmd = new ReqCmds();
             reqCmd.sUse = "BOINC";
             reqCmd.UseRadioButtons = true;
-            EditAllConfig bpp = new EditAllConfig(ref ProjectStats, ref reqCmd);
+            EditccConfigs bpp = new EditccConfigs(ref ProjectStats, ref reqCmd);
             bpp.ShowDialog();
             bpp.Dispose();
         }
@@ -576,6 +604,36 @@ namespace CreditStatistics
             OnlinePCReport opp = new OnlinePCReport(ref ProjectStats, ref reqCmd);
             opp.ShowDialog();
             opp.Dispose();
+        }
+
+        private void passwordInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PasswordInfo passwordInfo = new PasswordInfo();
+            passwordInfo.ShowDialog();
+            passwordInfo.Dispose();
+        }
+
+        private void CreditStatistics_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ProjectStats.ManagedPCs.SaveManagedPCs();
+        }
+
+        private void getAllConfigFilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ViewAppVersions eac = new ViewAppVersions(ref ProjectStats);
+            eac.ShowDialog();
+            eac.Dispose();
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            ReqCmds reqCmd = new ReqCmds();
+            reqCmd.sUse = "BOINC";
+            reqCmd.UseRadioButtons = true;
+            reqCmd.ColorAppConfig = true;
+            EditAllAppConfigs eac = new EditAllAppConfigs(ref ProjectStats, ref reqCmd);
+            eac.ShowDialog();
+            eac.Dispose();
         }
     }
 }
