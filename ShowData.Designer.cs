@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ShowData));
             tbInfo = new TextBox();
             tbHdrInfo = new TextBox();
             btnRead = new Button();
             timerDoSelected = new System.Windows.Forms.Timer(components);
             btnCancel = new Button();
-            lbHdr = new Label();
             cbfilterSTD = new CheckBox();
             pbSeq = new ProgressBar();
             btnRunSprint = new Button();
@@ -66,6 +66,7 @@
             btnApplyLimit = new Button();
             toolTip1 = new ToolTip(components);
             cbUseSecc = new CheckBox();
+            label3 = new Label();
             groupBox1 = new GroupBox();
             groupBox2 = new GroupBox();
             lbBunkerDays = new Label();
@@ -75,6 +76,10 @@
             label2 = new Label();
             tbUTCs = new TextBox();
             label1 = new Label();
+            TimerNoSeq = new System.Windows.Forms.Timer(components);
+            groupBox3 = new GroupBox();
+            rbAnyStudy = new RadioButton();
+            rbUseStudy = new RadioButton();
             tcShowData.SuspendLayout();
             tabResults.SuspendLayout();
             tabSettings.SuspendLayout();
@@ -86,6 +91,7 @@
             gbAnal.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
+            groupBox3.SuspendLayout();
             SuspendLayout();
             // 
             // tbInfo
@@ -133,44 +139,34 @@
             btnCancel.UseVisualStyleBackColor = true;
             btnCancel.Click += btnCancel_Click;
             // 
-            // lbHdr
-            // 
-            lbHdr.AutoSize = true;
-            lbHdr.Font = new Font("Courier New", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            lbHdr.Location = new Point(556, 13);
-            lbHdr.Name = "lbHdr";
-            lbHdr.Size = new Size(49, 15);
-            lbHdr.TabIndex = 4;
-            lbHdr.Text = "label1";
-            // 
             // cbfilterSTD
             // 
             cbfilterSTD.AutoSize = true;
-            cbfilterSTD.Checked = true;
-            cbfilterSTD.CheckState = CheckState.Checked;
+            cbfilterSTD.Enabled = false;
             cbfilterSTD.Location = new Point(940, 12);
             cbfilterSTD.Name = "cbfilterSTD";
             cbfilterSTD.Size = new Size(86, 19);
             cbfilterSTD.TabIndex = 5;
             cbfilterSTD.Text = "Apply Filter";
             cbfilterSTD.UseVisualStyleBackColor = true;
+            cbfilterSTD.CheckedChanged += cbfilterSTD_CheckedChanged;
             // 
             // pbSeq
             // 
-            pbSeq.Location = new Point(214, 25);
+            pbSeq.Location = new Point(173, 25);
             pbSeq.Name = "pbSeq";
-            pbSeq.Size = new Size(268, 23);
+            pbSeq.Size = new Size(309, 23);
             pbSeq.TabIndex = 6;
             // 
             // btnRunSprint
             // 
             btnRunSprint.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnRunSprint.ForeColor = SystemColors.Highlight;
-            btnRunSprint.Location = new Point(22, 290);
+            btnRunSprint.Location = new Point(22, 22);
             btnRunSprint.Name = "btnRunSprint";
-            btnRunSprint.Size = new Size(111, 44);
+            btnRunSprint.Size = new Size(85, 36);
             btnRunSprint.TabIndex = 7;
-            btnRunSprint.Text = "Run sprint\r\ncollection";
+            btnRunSprint.Text = "Run sprint";
             btnRunSprint.UseVisualStyleBackColor = true;
             btnRunSprint.Click += btnRunSprint_Click;
             // 
@@ -231,7 +227,7 @@
             gbPJs.Size = new Size(312, 409);
             gbPJs.TabIndex = 1;
             gbPJs.TabStop = false;
-            gbPJs.Text = "Sprint Projects in blue";
+            gbPJs.Text = "Sprint Projects in blue, hover to get study";
             // 
             // btnInvertPC
             // 
@@ -394,9 +390,9 @@
             gbAnal.Controls.Add(btnAddStats);
             gbAnal.Controls.Add(btnShowAnal);
             gbAnal.Enabled = false;
-            gbAnal.Location = new Point(22, 383);
+            gbAnal.Location = new Point(12, 464);
             gbAnal.Name = "gbAnal";
-            gbAnal.Size = new Size(139, 251);
+            gbAnal.Size = new Size(139, 253);
             gbAnal.TabIndex = 10;
             gbAnal.TabStop = false;
             gbAnal.Text = "Update averages";
@@ -461,6 +457,18 @@
             cbUseSecc.Text = "Include Job Cnt";
             toolTip1.SetToolTip(cbUseSecc, "subtract successfull jobs from the\r\nrequired job count when calculating\r\nnew limits for the remaining days.");
             cbUseSecc.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.BackColor = SystemColors.Info;
+            label3.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label3.Location = new Point(13, 155);
+            label3.Name = "label3";
+            label3.Size = new Size(107, 15);
+            label3.TabIndex = 10;
+            label3.Text = "Why  This Matters";
+            toolTip1.SetToolTip(label3, resources.GetString("label3.ToolTip"));
             // 
             // groupBox1
             // 
@@ -551,21 +559,66 @@
             label1.TabIndex = 0;
             label1.Text = "UTC Start";
             // 
+            // TimerNoSeq
+            // 
+            TimerNoSeq.Interval = 1000;
+            TimerNoSeq.Tick += TimerNoSeq_Tick;
+            // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(label3);
+            groupBox3.Controls.Add(rbAnyStudy);
+            groupBox3.Controls.Add(rbUseStudy);
+            groupBox3.Controls.Add(btnRunSprint);
+            groupBox3.Location = new Point(16, 241);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new Size(135, 201);
+            groupBox3.TabIndex = 13;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Sprint data collection";
+            // 
+            // rbAnyStudy
+            // 
+            rbAnyStudy.AutoSize = true;
+            rbAnyStudy.Checked = true;
+            rbAnyStudy.ForeColor = SystemColors.Highlight;
+            rbAnyStudy.Location = new Point(18, 80);
+            rbAnyStudy.Name = "rbAnyStudy";
+            rbAnyStudy.Size = new Size(92, 19);
+            rbAnyStudy.TabIndex = 9;
+            rbAnyStudy.TabStop = true;
+            rbAnyStudy.Tag = "none";
+            rbAnyStudy.Text = "Use any data";
+            rbAnyStudy.UseVisualStyleBackColor = true;
+            rbAnyStudy.CheckedChanged += rbStudyOption_CheckedChanged;
+            // 
+            // rbUseStudy
+            // 
+            rbUseStudy.AutoSize = true;
+            rbUseStudy.ForeColor = SystemColors.Highlight;
+            rbUseStudy.Location = new Point(18, 115);
+            rbUseStudy.Name = "rbUseStudy";
+            rbUseStudy.Size = new Size(97, 19);
+            rbUseStudy.TabIndex = 8;
+            rbUseStudy.Tag = "one";
+            rbUseStudy.Text = "Require study";
+            rbUseStudy.UseVisualStyleBackColor = true;
+            rbUseStudy.CheckedChanged += rbStudyOption_CheckedChanged;
+            // 
             // ShowData
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1350, 765);
+            Controls.Add(groupBox3);
             Controls.Add(tcShowData);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
             Controls.Add(gbAnal);
             Controls.Add(btnViewCol);
-            Controls.Add(btnRunSprint);
             Controls.Add(pbSeq);
             Controls.Add(tbHdrInfo);
             Controls.Add(cbfilterSTD);
-            Controls.Add(lbHdr);
             Controls.Add(btnCancel);
             Controls.Add(btnRead);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -588,6 +641,8 @@
             groupBox1.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -599,7 +654,6 @@
         private Button btnRead;
         private System.Windows.Forms.Timer timerDoSelected;
         private Button btnCancel;
-        private Label lbHdr;
         private CheckBox cbfilterSTD;
         private ProgressBar pbSeq;
         private Button btnRunSprint;
@@ -640,5 +694,10 @@
         private Button btnUpdateUTC;
         private TextBox tbUTCe;
         private Label label2;
+        private System.Windows.Forms.Timer TimerNoSeq;
+        private GroupBox groupBox3;
+        private RadioButton rbUseStudy;
+        private Label label3;
+        private RadioButton rbAnyStudy;
     }
 }

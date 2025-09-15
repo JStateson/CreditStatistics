@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static CreditStatistics.globals;
 using static CreditStatistics.PandoraConfig;
 
 
@@ -87,6 +88,8 @@ namespace CreditStatistics
                     FormSystemsCB();
                     break;
             }
+            tbEdit.SelectionStart = tbEdit.TextLength;
+            tbEdit.SelectionLength = 0;
         }
 
         private void FormSystemsCB()
@@ -113,19 +116,6 @@ namespace CreditStatistics
             }
         }
 
-        private bool IsSystemChecked(string systemName)
-        {
-            foreach (Control c in gbList.Controls)
-            {
-                if (c is CheckBox)
-                {
-                    CheckBox cb = (CheckBox)c;
-                    if (cb.Text == systemName && cb.Checked)
-                        return true;
-                }
-            }
-            return false;
-        }
 
         private bool IsProjectChecked(string projectName)
         {
@@ -335,6 +325,27 @@ namespace CreditStatistics
             }
         }
 
+        private void EnableSubscribed(string PCname)
+        {
+            foreach (Control c in gbList.Controls)
+            {
+                if (c is CheckBox)
+                {
+                    CheckBox cb = (CheckBox)c;
+                    if(PCname == "Default")
+                    {
+                        cb.Enabled = true;
+                    }
+                    else
+                    {
+                        cHostInfo hi = ManagedPCs.NameToSystem(PCname);
+                        cLHe lh = hi.GetLocalProjectInfo(cb.Text);
+                        cb.Enabled = lh != null;
+                    }
+                }
+            }
+        }
+
         private void lbPCs_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedItem = lbPCs.SelectedItem;
@@ -344,6 +355,7 @@ namespace CreditStatistics
                 btnApplyAbove.Enabled = lbPCselectedIndex > 0;
                 btnApplyAll.Enabled = !btnApplyAbove.Enabled;
                 lbPCselectedItem = selectedItem.ToString();
+                EnableSubscribed(lbPCselectedItem);
                 if (lbPCselectedIndex > 0)
                 {
                     int i = 1;
@@ -384,22 +396,21 @@ namespace CreditStatistics
                 foreach(cCalcLimitProj clP in  CopyDatabase[nLoc].ProjList)
                     clP.ProjectDisabled = true;
 
-                //CopyDatabase[nLoc].DeepCopy(ref TempletDB);
-                for(int i = 0; i < TempletDB.ProjList.Count; i++)
+                for (int i = 0; i < ProjectStats.ProjectList.Count; i++)
                 {
-                    string sProjName = TempletDB.ProjList[i].ShortName;
-                    int iLoc = CopyDatabase[nLoc].NameToIndex(sProjName);
-                    if(iLoc < 0)
+                    string sn = ProjectStats.ProjectList[i].shortname;
+                    bool bIsChecked = IsProjectChecked(sn);
+                    int iLoc = CopyDatabase[nLoc].NameToIndex(sn);
+                    if (iLoc < 0 && bIsChecked)
                     {
                         cCalcLimitProj newclP = new cCalcLimitProj();
-                        newclP.CopyTemplet(TempletDB.ProjList[i]);
+                        cPSlist PSl = ProjectStats.GetProjectByShortName(sn);
+                        newclP.init(PSl.sURL, false);
                         newclP.sPCname = lbPCselectedItem;
                         CopyDatabase[nLoc].ProjList.Add(newclP);
                     }
-                    else
-                    {
-                        CopyDatabase[nLoc].ProjList[iLoc].ProjectDisabled = false;
-                    }
+                    if(iLoc >= 0 && !bIsChecked)
+                        CopyDatabase[nLoc].ProjList[iLoc].ProjectDisabled = true;
                 }
             }
         }

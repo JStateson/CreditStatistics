@@ -34,21 +34,32 @@
             settingsToolStripMenuItem = new ToolStripMenuItem();
             findOtherPCsToolStripMenuItem = new ToolStripMenuItem();
             getStudyInfoToolStripMenuItem = new ToolStripMenuItem();
+            toolStripMenuItem1 = new ToolStripMenuItem();
             getAllConfigFilesToolStripMenuItem = new ToolStripMenuItem();
             passwordInfoToolStripMenuItem = new ToolStripMenuItem();
             runOptionsToolStripMenuItem = new ToolStripMenuItem();
-            runMultiple = new ToolStripMenuItem();
             ContactProject = new ToolStripMenuItem();
             bunkerControlsToolStripMenuItem = new ToolStripMenuItem();
             seeWhatsBunkeredToolStripMenuItem = new ToolStripMenuItem();
             seeRemoteConfigFilesToolStripMenuItem = new ToolStripMenuItem();
             communicateWithPCsToolStripMenuItem = new ToolStripMenuItem();
             slprintPreperationToolStripMenuItem = new ToolStripMenuItem();
-            assignPCsAndProjectsToolStripMenuItem = new ToolStripMenuItem();
+            tsmAssignCpuGpu = new ToolStripMenuItem();
+            tsmMinWUsNeeded = new ToolStripMenuItem();
+            tsmAssignStudy = new ToolStripMenuItem();
             collectDataToolStripMenuItem = new ToolStripMenuItem();
             ShowPandoraMenuItem = new ToolStripMenuItem();
             showEditAppConfigToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
             whatToolStripMenuItem = new ToolStripMenuItem();
+            helpToolStripMenuItem = new ToolStripMenuItem();
+            tsmWhatIs = new ToolStripMenuItem();
+            tsmInitSetup = new ToolStripMenuItem();
+            tsmGetStats = new ToolStripMenuItem();
+            tsmSaveData = new ToolStripMenuItem();
+            tasmSprintCfg = new ToolStripMenuItem();
+            tsmCreateLimits = new ToolStripMenuItem();
+            tsmRunSprint = new ToolStripMenuItem();
             groupBox1 = new GroupBox();
             btnRun = new Button();
             btnViewPage = new Button();
@@ -71,7 +82,6 @@
             gbSamURL = new GroupBox();
             tbProjUrl = new TextBox();
             label1 = new Label();
-            toolStripMenuItem1 = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -84,7 +94,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { settingsToolStripMenuItem, runOptionsToolStripMenuItem, bunkerControlsToolStripMenuItem, slprintPreperationToolStripMenuItem, whatToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { settingsToolStripMenuItem, runOptionsToolStripMenuItem, bunkerControlsToolStripMenuItem, slprintPreperationToolStripMenuItem, whatToolStripMenuItem, helpToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(934, 24);
@@ -112,6 +122,13 @@
             getStudyInfoToolStripMenuItem.Text = "Get Study Info";
             getStudyInfoToolStripMenuItem.Click += getStudyInfoToolStripMenuItem_Click;
             // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new Size(204, 22);
+            toolStripMenuItem1.Text = "View/Edit all app configs";
+            toolStripMenuItem1.Click += toolStripMenuItem1_Click;
+            // 
             // getAllConfigFilesToolStripMenuItem
             // 
             getAllConfigFilesToolStripMenuItem.Name = "getAllConfigFilesToolStripMenuItem";
@@ -128,22 +145,15 @@
             // 
             // runOptionsToolStripMenuItem
             // 
-            runOptionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { runMultiple, ContactProject });
+            runOptionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ContactProject });
             runOptionsToolStripMenuItem.Name = "runOptionsToolStripMenuItem";
-            runOptionsToolStripMenuItem.Size = new Size(85, 20);
-            runOptionsToolStripMenuItem.Text = "Run Options";
-            // 
-            // runMultiple
-            // 
-            runMultiple.Name = "runMultiple";
-            runMultiple.Size = new Size(204, 22);
-            runMultiple.Text = "Multiple studies and PCs";
-            runMultiple.Click += runMultiple_Click;
+            runOptionsToolStripMenuItem.Size = new Size(63, 20);
+            runOptionsToolStripMenuItem.Text = "Pandora";
             // 
             // ContactProject
             // 
             ContactProject.Name = "ContactProject";
-            ContactProject.Size = new Size(204, 22);
+            ContactProject.Size = new Size(161, 22);
             ContactProject.Text = "Contact Projects";
             ContactProject.Click += ContactProject_Click;
             // 
@@ -177,38 +187,57 @@
             // 
             // slprintPreperationToolStripMenuItem
             // 
-            slprintPreperationToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { assignPCsAndProjectsToolStripMenuItem, collectDataToolStripMenuItem, ShowPandoraMenuItem, showEditAppConfigToolStripMenuItem });
+            slprintPreperationToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tsmAssignCpuGpu, tsmAssignStudy, tsmMinWUsNeeded, collectDataToolStripMenuItem, ShowPandoraMenuItem, showEditAppConfigToolStripMenuItem, toolStripSeparator1 });
             slprintPreperationToolStripMenuItem.Name = "slprintPreperationToolStripMenuItem";
             slprintPreperationToolStripMenuItem.Size = new Size(77, 20);
             slprintPreperationToolStripMenuItem.Text = "Sprint Prep";
             // 
-            // assignPCsAndProjectsToolStripMenuItem
+            // tsmAssignCpuGpu
             // 
-            assignPCsAndProjectsToolStripMenuItem.Name = "assignPCsAndProjectsToolStripMenuItem";
-            assignPCsAndProjectsToolStripMenuItem.Size = new Size(202, 22);
-            assignPCsAndProjectsToolStripMenuItem.Text = "Assign PCs and Projects";
-            assignPCsAndProjectsToolStripMenuItem.Click += assignPCsAndProjectsToolStripMenuItem_Click;
+            tsmAssignCpuGpu.Name = "tsmAssignCpuGpu";
+            tsmAssignCpuGpu.Size = new Size(234, 22);
+            tsmAssignCpuGpu.Text = "Assign Cpu or Gpu to projects";
+            tsmAssignCpuGpu.Click += tsmAssignCpuGpu_Click;
+            // 
+            // tsmMinWUsNeeded
+            // 
+            tsmMinWUsNeeded.Name = "tsmMinWUsNeeded";
+            tsmMinWUsNeeded.Size = new Size(234, 22);
+            tsmMinWUsNeeded.Text = "Assign minimum WUs needed";
+            tsmMinWUsNeeded.Click += tsmMinWUsNeeded_Click;
+            // 
+            // tsmAssignStudy
+            // 
+            tsmAssignStudy.Name = "tsmAssignStudy";
+            tsmAssignStudy.Size = new Size(234, 22);
+            tsmAssignStudy.Text = "Assign Study to be used";
+            tsmAssignStudy.Click += tsmAssignStudy_Click;
             // 
             // collectDataToolStripMenuItem
             // 
             collectDataToolStripMenuItem.Name = "collectDataToolStripMenuItem";
-            collectDataToolStripMenuItem.Size = new Size(202, 22);
+            collectDataToolStripMenuItem.Size = new Size(234, 22);
             collectDataToolStripMenuItem.Text = "Collect Data make limits";
             collectDataToolStripMenuItem.Click += collectDataToolStripMenuItem_Click;
             // 
             // ShowPandoraMenuItem
             // 
             ShowPandoraMenuItem.Name = "ShowPandoraMenuItem";
-            ShowPandoraMenuItem.Size = new Size(202, 22);
+            ShowPandoraMenuItem.Size = new Size(234, 22);
             ShowPandoraMenuItem.Text = "Show Pandora";
             ShowPandoraMenuItem.Click += sendPandoraViewAppsToolStripMenuItem_Click;
             // 
             // showEditAppConfigToolStripMenuItem
             // 
             showEditAppConfigToolStripMenuItem.Name = "showEditAppConfigToolStripMenuItem";
-            showEditAppConfigToolStripMenuItem.Size = new Size(202, 22);
+            showEditAppConfigToolStripMenuItem.Size = new Size(234, 22);
             showEditAppConfigToolStripMenuItem.Text = "Show/Edit App Config";
             showEditAppConfigToolStripMenuItem.Click += showEditAppConfigToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(231, 6);
             // 
             // whatToolStripMenuItem
             // 
@@ -216,6 +245,62 @@
             whatToolStripMenuItem.Size = new Size(127, 20);
             whatToolStripMenuItem.Text = "Check OnLine status";
             whatToolStripMenuItem.Click += whatToolStripMenuItem_Click;
+            // 
+            // helpToolStripMenuItem
+            // 
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tsmWhatIs, tsmInitSetup, tsmGetStats, tsmSaveData, tasmSprintCfg, tsmCreateLimits, tsmRunSprint });
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new Size(44, 20);
+            helpToolStripMenuItem.Text = "Help";
+            // 
+            // tsmWhatIs
+            // 
+            tsmWhatIs.Name = "tsmWhatIs";
+            tsmWhatIs.Size = new Size(214, 22);
+            tsmWhatIs.Text = "What this program is";
+            tsmWhatIs.Click += tsmHelp_Click;
+            // 
+            // tsmInitSetup
+            // 
+            tsmInitSetup.Name = "tsmInitSetup";
+            tsmInitSetup.Size = new Size(214, 22);
+            tsmInitSetup.Text = "Initial setup";
+            tsmInitSetup.Click += tsmHelp_Click;
+            // 
+            // tsmGetStats
+            // 
+            tsmGetStats.Name = "tsmGetStats";
+            tsmGetStats.Size = new Size(214, 22);
+            tsmGetStats.Text = "How to get credit statistics";
+            tsmGetStats.Click += tsmHelp_Click;
+            // 
+            // tsmSaveData
+            // 
+            tsmSaveData.Name = "tsmSaveData";
+            tsmSaveData.Size = new Size(214, 22);
+            tsmSaveData.Text = "How to save credit data";
+            tsmSaveData.Click += tsmHelp_Click;
+            // 
+            // tasmSprintCfg
+            // 
+            tasmSprintCfg.Name = "tasmSprintCfg";
+            tasmSprintCfg.Size = new Size(214, 22);
+            tasmSprintCfg.Text = "Configuring for Sprint";
+            tasmSprintCfg.Click += tsmHelp_Click;
+            // 
+            // tsmCreateLimits
+            // 
+            tsmCreateLimits.Name = "tsmCreateLimits";
+            tsmCreateLimits.Size = new Size(214, 22);
+            tsmCreateLimits.Text = "Create optimum Sprint";
+            tsmCreateLimits.Click += tsmHelp_Click;
+            // 
+            // tsmRunSprint
+            // 
+            tsmRunSprint.Name = "tsmRunSprint";
+            tsmRunSprint.Size = new Size(214, 22);
+            tsmRunSprint.Text = "Running the Sprint";
+            tsmRunSprint.Click += tsmHelp_Click;
             // 
             // groupBox1
             // 
@@ -445,13 +530,6 @@
             label1.TabIndex = 0;
             label1.Text = "Paste your URL in below box and click RUN to get\r\nstatistics.  The URL must contain the phrase HOST\r\nAlternately select a project and it's study.\r\n";
             // 
-            // toolStripMenuItem1
-            // 
-            toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(204, 22);
-            toolStripMenuItem1.Text = "View/Edit all app configs";
-            toolStripMenuItem1.Click += toolStripMenuItem1_Click;
-            // 
             // CreditStatistics
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -500,7 +578,6 @@
         private Button btnGetData;
         private ToolStripMenuItem findOtherPCsToolStripMenuItem;
         private ToolStripMenuItem runOptionsToolStripMenuItem;
-        private ToolStripMenuItem runMultiple;
         private ToolStripMenuItem ContactProject;
         private Button btnViewPage;
         private TextBox tbInfo;
@@ -512,12 +589,23 @@
         private ToolStripMenuItem communicateWithPCsToolStripMenuItem;
         private ToolStripMenuItem slprintPreperationToolStripMenuItem;
         private ToolStripMenuItem collectDataToolStripMenuItem;
-        private ToolStripMenuItem assignPCsAndProjectsToolStripMenuItem;
+        private ToolStripMenuItem tsmAssignCpuGpu;
         private ToolStripMenuItem ShowPandoraMenuItem;
         private ToolStripMenuItem showEditAppConfigToolStripMenuItem;
         private ToolStripMenuItem whatToolStripMenuItem;
         private ToolStripMenuItem passwordInfoToolStripMenuItem;
         private ToolStripMenuItem getAllConfigFilesToolStripMenuItem;
         private ToolStripMenuItem toolStripMenuItem1;
+        private ToolStripMenuItem helpToolStripMenuItem;
+        private ToolStripMenuItem tsmWhatIs;
+        private ToolStripMenuItem tsmInitSetup;
+        private ToolStripMenuItem tsmGetStats;
+        private ToolStripMenuItem tsmSaveData;
+        private ToolStripMenuItem tasmSprintCfg;
+        private ToolStripMenuItem tsmCreateLimits;
+        private ToolStripMenuItem tsmRunSprint;
+        private ToolStripMenuItem tsmAssignStudy;
+        private ToolStripMenuItem tsmMinWUsNeeded;
+        private ToolStripSeparator toolStripSeparator1;
     }
 }

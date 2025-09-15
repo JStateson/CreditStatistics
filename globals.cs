@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -94,7 +95,10 @@ namespace CreditStatistics
         public int[] nPorts  = new int[3] {31416, 22,-1};
         public bool UseRadioButtons = false;
         public bool PerformScan = false;
-        public bool ColorAppConfig = false;   // colors red if does not have HasAppConfigl else color using sprint enabled
+        public bool AddPhrase = false;
+        public string ComboxUsage = "cpugpu"; // could also be 
+        public string PhraseToAdd = "All"; // All, Default
+        public bool ColorAppConfig = false;   // colors red if does not have HasAppConfig else color using sprint enabled
     }
 
     internal class CSendNotepad
@@ -136,16 +140,67 @@ namespace CreditStatistics
 
     internal class globals
     {
-        public static string WhereEXE;
-        public static string WhereDOC;
-        public static string name_ID_Study_config = "PROJ_STUDY_ID.cfg";
+        public static string WhereExe;
+        public static string WherePandoraDocs;
+
+        public static string WhereCredit = "CreditData";
+        public static string WhereProjStudyID = "PROJ_STUDY_ID.cfg";
         public static string WhereDefaultHostList = "PROJ_PC_ID.cfg";
+        public static string WherePcCpuGpu = "PC_CPU_GPU.cfg";
+        public static string WhereProjectAccessParams = "PROJ_ACCESS_PARAMS.xml";
+        public static string WhereAppVersions = "PROJ_APP_VERSIONS.cfg";
+        //
+        public static string WherePandoraData = "PandoraData";
         public static string WhereMasterPandora = "ALL_PANDORA_CONFIG.txt";
         public static string WhereCurrentDefaultDatabaseConfig = "DEFAULT_DATABASE_CONFIG.txt";
         public static string WhereCurrentDefaultPandoraConfig = "DEFAULT_PANDORA_CONFIG.txt";
-        public static string WhereCurrentDefaultCC_config = "DEFAULT_CC_CONFIG.txt";
-        public static string WhereProjectAccessParams = "Proj_Access_Params.xml";
-        public static string WhereAppVersions = "PROJ_APP_VERSIONS.cfg";
+        //Boinc
+        public static string WhereBoincData = "BoincData";
+        public static string WhereCurrentDefaultCC_config = "DEFAULT_CC_CONFIG.xml";
+        //BoincTasks
+        public static string WhereBoincTaskFolder;
+
+        public static void FormDataPaths()
+        {
+            WhereExe = AppContext.BaseDirectory.ToString();
+            int i = WhereExe.IndexOf("\\Release");
+            if (i < 0)
+                i = WhereExe.IndexOf("\\Debug");
+            if(i >= 0)
+            {
+                // when in visual studio use the bin folder
+                i = WhereExe.IndexOf("\\bin");
+                Debug.Assert(i >= 0);
+                WhereExe = WhereExe.Substring(0, i + 4);
+            }
+            
+
+            //CreditStatistics
+            WhereCredit = Path.Combine(WhereExe, WhereCredit);
+            Directory.CreateDirectory(WhereCredit);
+            WhereProjStudyID = Path.Combine(WhereCredit, WhereProjStudyID);
+            WhereDefaultHostList = Path.Combine(WhereCredit, WhereDefaultHostList);
+            WherePcCpuGpu = Path.Combine(WhereCredit, WherePcCpuGpu);
+            WhereProjectAccessParams = Path.Combine(WhereCredit, WhereProjectAccessParams);
+            WhereAppVersions = Path.Combine(WhereCredit, WhereAppVersions);
+
+            //Pandora
+            WherePandoraData = Path.Combine(WhereExe, WherePandoraData);
+            Directory.CreateDirectory(WherePandoraData);
+            WhereMasterPandora = Path.Combine(WherePandoraData, WhereMasterPandora);
+            WhereCurrentDefaultDatabaseConfig = Path.Combine(WherePandoraData, WhereCurrentDefaultDatabaseConfig);
+            WhereCurrentDefaultPandoraConfig = Path.Combine(WherePandoraData, WhereCurrentDefaultPandoraConfig);
+
+            //Boinc
+            WhereBoincData = Path.Combine(WhereExe, WhereBoincData);
+            Directory.CreateDirectory(WhereBoincData);
+            WhereCurrentDefaultCC_config = Path.Combine(WhereBoincData,WhereCurrentDefaultCC_config);
+
+            WhereBoincTaskFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\eFMer\\BoincTasks";
+
+            //MessageBox.Show("data folders are here: " + WhereExe);
+        }
+
         public static int ERR_none = 0;
         public static int ERR_info = 1;
         public static int ERR_warning = 2;
@@ -157,7 +212,8 @@ namespace CreditStatistics
         public static string PathTo_boinccmd_exe;
         public static string PathTo_boinc;
         public static string PathToBoincData = "";
-        public static string BoincTaskFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\eFMer\\BoincTasks";
+
+
         // pad right side with spaces to fill
         public static string Rp(string strIn, int cnt)
         {
@@ -176,154 +232,14 @@ namespace CreditStatistics
             box.ScrollToCaret();
         }
 
-        /*
-
-                public static string xRunScpAndGetOutput(ref cPClimit PCl, string sLocalFile, string sRemoteFile, bool IsLinux, string CK)
-                {
-                    //if (PCl.IsLocalhost()) return "";
-                    string Argument = "";
-                    string remoteUser = PCl.UserName;
-                    string remoteHost = PCl.PCname;
-                    string ck = "/" + CK;
-
-                    if (PCl.IsLocalhost())  //local pc is windows and there is no SSH server
-                    {
-                        try
-                        {
-                            string stemp = File.ReadAllText(sLocalFile);
-                            File.WriteAllText(sRemoteFile, stemp);                    
-                        }
-                        catch(Exception e)
-                        {
-                            return "Error transfering file " + sLocalFile + Environment.NewLine;
-                        }
-
-                        return sLocalFile + " copied to " + sRemoteFile + Environment.NewLine;
-                    }
-
-
-                    if (IsLinux)
-                    {
-                        Argument = ck + $" scp {sLocalFile}  {remoteUser}@{remoteHost}:{sRemoteFile}";
-                    }
-                    else
-                    {
-                        Argument =  ck + $" scp {sLocalFile}  {remoteHost}:{sRemoteFile}";
-                    }
-
-                    bool bRedirect = CK == "c"; // if c then redirect output, else just run command
-
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = Argument,
-                        RedirectStandardOutput = bRedirect,
-                        RedirectStandardError = bRedirect,
-                        RedirectStandardInput = bRedirect,
-                        UseShellExecute = !bRedirect,
-                        CreateNoWindow = bRedirect
-                    };
-
-                    using (var process = Process.Start(psi))
-                    {
-                        if (bRedirect)
-                        {
-                            string output = process.StandardOutput.ReadToEnd().Trim();
-                            string error = process.StandardError.ReadToEnd().Trim();
-                            process.WaitForExit();
-
-                            // Check for SSH failure only (e.g., network issues, bad command, does not exist)
-                            if (process.ExitCode == 255 || output == "" && error != "")
-                            {
-                                MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
-                            }
-                            return output.Trim(); // Strip newline characters
-                        }
-                    }
-                    return "";
-
-                }
-
-                public static void xRemovePandora(ref cPClimit PCl)
-                {
-                    bool bIsLinux = PCl.OStype != "w";
-                    string sCommand = "";
-
-                    if (bIsLinux)
-                    {
-                        sCommand = "sudo rm -f /var/lib/boinc/pandora_config";
-                    }
-                    else
-                    {
-                        sCommand = "\"del \\ProgramData\\boinc\\pandora_config\"";
-                    }
-
-                    if (!PCl.IsLocalhost())
-                    {
-                        xRunSshAndGetOutput(ref PCl, sCommand, bIsLinux, "c");
-                    }
-                    else
-                    {
-                        File.Delete("C:\\ProgramData\\boinc\\pandora_config");
-                    }
-                }
-
-
-
-                public static string xRunSshAndGetOutput(ref cPClimit PCl, string remoteCommand, bool IsLinux, string CK)
-                {
-                    if (PCl.IsLocalhost()) return "";
-                    string Argument = "";
-                    string remoteUser = PCl.UserName;
-                    string remoteHost = PCl.PCname;
-                    string ck = "/" + CK;
-                    if (IsLinux)
-                    {
-                        Argument = remoteUser == "" ? ck + $" ssh {remoteHost} \"{remoteCommand}\"" :
-                                    ck + $" ssh {remoteUser}@{remoteHost} \"{remoteCommand}\"";
-                    }
-                    else
-                    {
-                        Argument = remoteUser == "" ? ck + $" ssh {remoteHost} {remoteCommand}" :
-                            ck + $" ssh {remoteUser}@{remoteHost} {remoteCommand}";
-                    }
-
-                    bool bRedirect = CK == "c"; // if c then redirect output, else just run command
-
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = Argument,
-                        RedirectStandardOutput = bRedirect,
-                        RedirectStandardError = bRedirect,
-                        RedirectStandardInput = bRedirect,
-                        UseShellExecute = !bRedirect,
-                        CreateNoWindow = bRedirect
-                    };
-
-                    using (var process = Process.Start(psi))
-                    {
-                        if (bRedirect)
-                        {
-                            string output = process.StandardOutput.ReadToEnd().Trim();
-                            string error = process.StandardError.ReadToEnd().Trim();
-                            process.WaitForExit();
-
-                            // Check for SSH failure only (e.g., network issues, bad command, does not exist)
-                            if (process.ExitCode == 255 || output == "" && error != "")
-                            {
-                                MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
-                            }
-                            return output.Trim(); // Strip newline characters
-                        }
-                    }
-                    return "";
-                }
-
-            */
         public static string NewLineToLinux(string input)
         {
             return input.Replace("\r\n", "\n");
+        }
+
+        public static string FormSampleDataPath(string PCname)
+        {
+            return Path.Combine(WherePandoraData, "sample_pandora_config_" + PCname + ".txt");
         }
 
         public static void SetTextSafe(TabControl tabControl, string tabPageName, TextBox textBox, string text)
@@ -482,16 +398,9 @@ namespace CreditStatistics
             File.WriteAllText(WhereCurrentDefaultDatabaseConfig, s.Trim());
         }
 
-        public static void WriteCCrecord(string PCname, ref string[] cc_config)
+        public static string FormAppConfigFilename(string PCname, string ProjName)
         {
-            string Pathname = WhereDOC + "\\cc_config_" + PCname + ".xml";
-            if(cc_config != null)
-                File.WriteAllLines(Pathname, cc_config);
-        }
-
-        public static string GetAppConfigFilename(string PCname, string ProjName)
-        {
-            return WhereDOC + "\\app_config_" + PCname + "_" + ProjName + ".xml";
+            return Path.Join(WhereBoincData,  "app_config_" + PCname + "_" + ProjName + ".xml");
         }
 
         public static string WriteACrecord(string ACpathname, ref string[] app_config)
@@ -511,7 +420,7 @@ namespace CreditStatistics
 
         public static string[] ReadACrecord(string PCname, string ProjName, out bool IsDefault)
         {
-            string Pathname = GetAppConfigFilename (PCname, ProjName);
+            string Pathname = FormAppConfigFilename (PCname, ProjName);
             IsDefault = false;
             try
             {
@@ -531,7 +440,7 @@ namespace CreditStatistics
 
         public static string ReadACstring(string PCname, string ProjName, out bool IsDefault)
         {
-            string Pathname = GetAppConfigFilename(PCname, ProjName);
+            string Pathname = FormAppConfigFilename(PCname, ProjName);
             IsDefault = false;
             try
             {
@@ -551,21 +460,28 @@ namespace CreditStatistics
 
         public static string[] ReadCCrecord(string PCname)
         {
-            string Pathname = WhereDOC + "\\cc_config_" + PCname + ".xml";
+            string Pathname = Path.Join(WhereBoincData, "cc_config_" + PCname + ".xml");
             if (!File.Exists(Pathname)) return null;
             return File.ReadAllLines(Pathname);
         }
 
+        public static void WriteCCrecord(string PCname, ref string[] cc_config)
+        {
+            string Pathname = Path.Join(WhereBoincData, "cc_config_" + PCname + ".xml");
+            if (cc_config != null)
+                File.WriteAllLines(Pathname, cc_config);
+        }
+
         public static void WritePCrecordS(string PCname, ref string[] pc_config)
         {
-            string Pathname = WhereDOC + "\\pandora_config_" + PCname ;
+            string Pathname = Path.Join(WherePandoraData, "pandora_config_" + PCname + ".txt") ;
             if (pc_config != null)
                 File.WriteAllLines(Pathname, pc_config);
         }
 
         public static string[] ReadPCrecordS(string PCname)
         {
-            string Pathname = WhereDOC + "\\pandora_config_" + PCname ;
+            string Pathname = Path.Join(WherePandoraData ,"pandora_config_" + PCname + ".txt");
             if (!File.Exists(Pathname)) return null;
             return File.ReadAllLines(Pathname);
         }
@@ -719,6 +635,8 @@ namespace CreditStatistics
             public string sHostName;
             public string sUrl;
             public double std;
+            public string sStudyV;
+            public string StudyName;
             public int nLongestName;
             public cCreditInfo SeqTotals = new cCreditInfo();
             public bool OnStartup = false;
@@ -823,6 +741,7 @@ namespace CreditStatistics
             public bool bDone;
             public bool bBusy;
             public bool bCancel;
+            public int TimeoutSecs = 20;
             public int NumValidWUs;
             public int NumValidOnPage;  // some projects need to count the number of valid WUs.  We need at  least 4 and possibly 20 for the maximum,
             public string sMsgErr;
@@ -840,11 +759,13 @@ namespace CreditStatistics
             public string UrlWanted;  // a specific url was wanted
             public string shortname;  // the project named in the url
             public string sStudyV;    // the study or appic used in the url
+            public string StudyName;
             public string sHostID;  // ID assigned by the project to the PC
             public string spage;    // page number (offset)
             public string sValid;   // whether valid, all or error is wanted.  
             public string PCname;  // is usually unknown if user pastes a url
             public string sValidV;  // usually 4 gets valid results
+            public bool UseStudy = false;
         }
 
         public class cOrganizedRaw
@@ -935,6 +856,8 @@ namespace CreditStatistics
             public bool IsSelected;
             public bool UsedInSprint;
             public string MasterUrl; // this is NOT lower case!
+            public int MinWUsNeeded;    // need this many samples to get a good standard deviation
+            public string app_type;
             public string shortname;
             public string name;
             public string sURL;
@@ -1003,6 +926,19 @@ namespace CreditStatistics
                     i++;
                 }
                 return 0;
+            }
+
+            public string GetNameOfStudy(string sStudyV)
+            {
+                if (sStudyV == "" || sStudyV == "null" || sStudyV == "0")
+                        return "All";                        
+                
+                foreach (string s in AvailableStudies)
+                {
+                    string[] ss = s.Split(':');
+                    if (ss[0].Trim() == sStudyV) return ss[1];
+                }
+                return "Unknown Study";
             }
 
             public void GetStudyUsingName(string shortname)
@@ -1138,19 +1074,17 @@ namespace CreditStatistics
                 //Debug.Assert(false);
                 return null;
             }
-            private string WhereStudyFile = "";
 
             public void init(ref cProjectStruct ProjectStats, string sPath)
             {
                 string[] StudyConfigFile = null;
                 psi.Clear();
-                WhereStudyFile = sPath;
                 int iPS = -1;
                 int nSCF = 0;
 
-                if (File.Exists(WhereStudyFile))
+                if (File.Exists(sPath))
                 {
-                    StudyConfigFile = File.ReadAllLines(WhereStudyFile);
+                    StudyConfigFile = File.ReadAllLines(sPath);
                     nSCF = StudyConfigFile.Length;
                 }
                 else StudyConfigFile = null;
@@ -1162,18 +1096,20 @@ namespace CreditStatistics
                     iPS++;
                     cProjectStudiesInfo PSI = new cProjectStudiesInfo();
                     PSI.sUrl = ps.sURL + ps.sHid; // just need to add the host id!
-                    if(nSCF>0)
-                        ps.sStudyL = "";
+                    //if(nSCF>0)ps.sStudyL = "";
+                    //todo to do why the above?
                     PSI.ShortName = ProjectStats.ShortName(iPS);
                     PSI.StudyIDsDue = new List<cStudyIDsDue>();
                     psi.Add(PSI);
                 }
                 
-
+                
                 cProjectStudiesInfo PCIforSN = null;
                 iPS = -1;
                 if (StudyConfigFile != null)
                 {
+                    for (int i = 0; i < ProjectStats.ProjectList.Count; i++)
+                        ProjectStats.ProjectList[i].sStudyL = "";
                     foreach (string s in StudyConfigFile) // may not be in the same order as the projectlist
                     {
                         iPS++;
@@ -1185,38 +1121,64 @@ namespace CreditStatistics
                         sid.sStudy = quad[1];
                         if (sid.sStudy == "")
                             sid.sStudy = "0";
+                        if (sid.sStudy == "0")
+                            quad[2] = "All";
                         int iLoc = ProjectStats.ShortnameToIndex(ShortName);
                         ProjectStats.ProjectList[iLoc].sStudyL += sid.sStudy + " ";
                         sid.sStudyName = quad[2];
                         if(sid.sStudyName == "")
-                            sid.sStudyName = "unknown";
+                            sid.sStudyName = "unknown";                        
                         sid.nItems = Convert.ToInt32(quad[3]);
                         sid.nDueDuration = Math.Abs(Convert.ToInt32(quad[4]));
                         sid.CPUsUsed = Convert.ToDouble(quad[5]);
                         sid.GPUsUsed = Convert.ToDouble(quad[6]);
-                        if(false)
-                        {
-                            if(ShortName == "milkyway")
-                            {
-                                sid.CPUsUsed = 4.0; // milkyway uses 4 cpus by default
-                                sid.GPUsUsed = 0;
-                            }
-                            else if(ShortName == "nfs")
-                            {
-                                sid.CPUsUsed = 1; 
-                                sid.GPUsUsed = 0;
-                            }
-                            else
-                            {
-                                sid.CPUsUsed = 1.0;
-                                sid.GPUsUsed = 1.0;  // unknown but use 1.0
-                            }
-                        }
                         PCIforSN.StudyIDsDue.Add(sid);
+                    }
+
+                    List<int> iStudyV = new List<int>();
+
+                    foreach (cProjectStudiesInfo PSI in psi)
+                    {
+                        PCIforSN = ThisPSI(PSI.ShortName);
+                        bool HasAll = false;
+                        iStudyV.Clear();
+                        foreach (cStudyIDsDue sid in PSI.StudyIDsDue)
+                        {
+                            if(sid.sStudy == "" || sid.sStudy =="null")
+                                sid.sStudy = "0";
+                            if (sid.sStudy == "0")
+                            {
+                                HasAll = true;
+                            }
+                            iStudyV.Add(Convert.ToInt32(sid.sStudy));
+                        }
+                        if (!HasAll)
+                        {
+                            cStudyIDsDue Newsid = new cStudyIDsDue();
+                            cStudyIDsDue Lastsid = PSI.StudyIDsDue.Last();
+                            Newsid.sStudy = "0";
+                            iStudyV.Add(0);
+                            Newsid.sStudyName = "All";
+                            Newsid.nItems = Lastsid.nItems;
+                            Newsid.CPUsUsed = Lastsid.CPUsUsed;
+                            Newsid.GPUsUsed = Lastsid.GPUsUsed;
+                            Newsid.nDueDuration = Lastsid.nDueDuration;
+                            PCIforSN.StudyIDsDue.Add(Newsid);
+                        }
+                        var indexed = iStudyV
+                            .Select((value, index) => new { Value = value, Index = index })
+                            .OrderBy(x => x.Value)
+                            .ToList();
+                        List<cStudyIDsDue> TempList = new List<cStudyIDsDue>();
+                        foreach (var item in indexed)
+                        {
+                            TempList.Add(PSI.StudyIDsDue[item.Index]);
+                        }
+                        PSI.StudyIDsDue = TempList;
+                        indexed = null;
                     }
                 }
 
-                bool bMissing = false;
                 for (int i = 0; i < ProjectStats.ProjectList.Count; i++)
                 {
                     string shortName = ProjectStats.ShortName(i);
@@ -1233,12 +1195,9 @@ namespace CreditStatistics
                         foreach (string s in ss)
                             PCI.AddStudy(s, "unknown", -1);
                         psi.Add(PCI);
-                        bMissing = true;
                     }
                 }                
 
-
-                bool bMustUpdate = bMissing;
                 foreach(PandoraConfig.cCalcLimitProj clp in ProjectStats.TempletDB.ProjList)
                 {
                     string shortName = clp.ShortName;
@@ -1256,7 +1215,6 @@ namespace CreditStatistics
                                         for (int i = 0; i < p.StudyIDsDue.Count; i++)
                                         {
                                             p.StudyIDsDue[i].nDueDuration = Math.Abs(j);
-                                            bMustUpdate = true;
                                         }
                                     }
                                 }
@@ -1264,10 +1222,7 @@ namespace CreditStatistics
                         }
                     }
                 }
-                if(bMustUpdate)
-                {
-                    SaveStudyFile();
-                }
+                SaveStudyFile();
             }
 
             public string SaveStudyFile()
@@ -1295,7 +1250,7 @@ namespace CreditStatistics
                     }
                 }
                 string[] StudyConfigFile = quad.ToArray();
-                File.WriteAllLines(WhereStudyFile, StudyConfigFile);
+                File.WriteAllLines(WhereProjStudyID, StudyConfigFile);
                 return sOut;
             }
 
@@ -1308,6 +1263,7 @@ namespace CreditStatistics
                 Debug.Assert(false, "name missing from table " + shortName);
                 return null;
             }
+
             public string GetStudyInfoList(string ProjName)
             {
                 string sOut = "";

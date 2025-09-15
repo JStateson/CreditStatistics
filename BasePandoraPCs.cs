@@ -27,12 +27,14 @@ namespace CreditStatistics
         {
             public bool MustRescan { get; }
             public string CheckedName { get; }
-            public int NumChecked {  get; }
-            public PCsChangedEventArgs(bool value, string checkedName, int numChecked)
+            public int NumChecked { get; }
+            public bool pbUseCancel { get; }
+            public PCsChangedEventArgs(bool value, string checkedName, int numChecked, bool Bcancel)
             {
                 MustRescan = value;
                 CheckedName = checkedName;
                 NumChecked = numChecked;
+                pbUseCancel = Bcancel;
             }
         }
 
@@ -50,7 +52,9 @@ namespace CreditStatistics
         private ReqCmds reqCmd;
         private bool isCB = true;
         private string LastChecked = "";
+        private int LastCount = -1;
         private bool InitLoad = false;
+        private bool CancelLocal = false;
 
         private bool mS;    // must check ssh status
         private bool mB;    // must check boinc port status
@@ -62,15 +66,15 @@ namespace CreditStatistics
 
         bool FirstOnLine = true;
         string FirstOnlinePC = "";
-        
+
         public BasePandoraPCs(ref cProjectStruct rProjectStats, ref ReqCmds RreqCmd)
         {
             InitializeComponent();
             // InitLoad = true;
             ProjectStats = rProjectStats;
             ManagedPCs = ProjectStats.ManagedPCs;
-            
-            pbUSE.Maximum = ManagedPCs.LocalSystems.Count+1;
+
+            pbUSE.Maximum = ManagedPCs.LocalSystems.Count + 1;
             pandoraConfig = new PandoraConfig(ref rProjectStats);
             PandoraDatabase = ProjectStats.PandoraDatabase;
             pandoraRPC = ManagedPCs.rpc;
@@ -101,6 +105,7 @@ namespace CreditStatistics
             }
             else
             {
+                CancelLocal = false;
                 if (isCB)
                     IsOnline();
                 else
@@ -127,6 +132,7 @@ namespace CreditStatistics
             Task aTask;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
+                if (CancelLocal) break;
                 i++;
                 string PCname = hi.ComputerID;
                 mS = !hi.SSHvalid;
@@ -140,18 +146,18 @@ namespace CreditStatistics
                 switch (reqCmd.sUse)
                 {
                     case "BOINC":
-                        if(mB)
+                        if (mB)
                         {
                             aTask = Task.Run(async () =>
                             {
                                 hi.HasBOINC = await globals.PortChecker.IsPortOpenAsync(hi.IPaddress, reqCmd.nPorts[0]);
                             });
                             aTask.Wait();
-                            hi.BOINCvalid = true;                            
+                            hi.BOINCvalid = true;
                         }
                         rb.Enabled = hi.HasBOINC;
                         //rb.Checked = hi.HasBOINC && isCB;
-                        if(hi.HasBOINC && FirstOnLine)
+                        if (hi.HasBOINC && FirstOnLine)
                         {
                             rb.Checked = true;
                             FirstOnLine = false;
@@ -161,10 +167,10 @@ namespace CreditStatistics
                             NumOffLine++;
                         else
                             if (LastChecked == "")
-                            {
-                                LastChecked = rb.Text;
-                                //rb.Checked = true;
-                            }
+                        {
+                            LastChecked = rb.Text;
+                            //rb.Checked = true;
+                        }
                         break;
 
                     case "SSH":
@@ -180,7 +186,7 @@ namespace CreditStatistics
                             aTask.Wait();
                             hi.BOINCvalid = true;
                             hi.SSHvalid = true;
-                            if(hi.HasSSH && FirstOnLine)
+                            if (hi.HasSSH && FirstOnLine)
                             {
                                 FirstOnLine = false;
                                 rb.Checked = true;
@@ -195,7 +201,7 @@ namespace CreditStatistics
                             aTask.Wait();
                             hi.BOINCvalid = true;
                         }
-                        else if(mS)
+                        else if (mS)
                         {
                             aTask = Task.Run(async () =>
                             {
@@ -232,7 +238,7 @@ namespace CreditStatistics
             pbUSE.Value = 0;
             Application.DoEvents();
             //btnReScan.Enabled = NumOffLine > 0;
-            NotifyForms(true, LastChecked, 1);
+            NotifyForms(true, LastChecked, 1, false);
             pbUSE.Value = 0;
             if (JustScanned)
                 SetScanDate();
@@ -250,6 +256,7 @@ namespace CreditStatistics
             bool JustScanned = false;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
+                if (CancelLocal) break;
                 i++;
                 mS = !hi.SSHvalid;
                 mB = !hi.BOINCvalid;
@@ -263,7 +270,7 @@ namespace CreditStatistics
                 switch (reqCmd.sUse)
                 {
                     case "BOINC":
-                        if(mB)
+                        if (mB)
                         {
                             aTask = Task.Run(async () =>
                             {
@@ -342,17 +349,18 @@ namespace CreditStatistics
             pbUSE.Value = 0;
             Application.DoEvents();
             //btnReScan.Enabled = NumOffLine > 0;
-            NotifyForms(true, LastChecked, CheckedCount);
+            NotifyForms(true, LastChecked, CheckedCount, false);
             pbUSE.Value = 0;
             if (JustScanned)
                 SetScanDate();
         }
 
 
-        private void NotifyForms(bool bRescan, string sname, int iLoc)
+        private void NotifyForms(bool bRescan, string sname, int iLoc, bool ForceCancel)
         {
             if (InitLoad) return;
-            PCsChanged?.Invoke(this, new PCsChangedEventArgs(bRescan, sname, iLoc));
+            LastCount = iLoc;
+            PCsChanged?.Invoke(this, new PCsChangedEventArgs(bRescan, sname, iLoc, ForceCancel));
         }
 
 
@@ -419,11 +427,29 @@ namespace CreditStatistics
         }
 
         private void rb_CheckedChanged(object sender, EventArgs e)
-        {           
+        {
             RadioButton rb = (RadioButton)sender;
             if (!rb.Checked) return;
             LastChecked = rb.Text;
-            NotifyForms(false, LastChecked, 1);
+            NotifyForms(false, LastChecked, 1, false);
+        }
+
+        public void StartPBuse( int imax)
+        {
+            btnCancel.Visible = true;
+            pbUSE.Value = 1;
+            pbUSE.Maximum = imax + 1;
+        }
+
+        public void IncPBuse()
+        {
+            pbUSE.Value++;
+        }
+
+        public void StopPBuse()
+        {
+            btnCancel.Visible = false;
+            pbUSE.Value = 0;
         }
 
         // status may have changed, need to udpate checkboxes or radioboxes
@@ -432,17 +458,17 @@ namespace CreditStatistics
             bool Rtn = true;
             cHostInfo hi = ManagedPCs.NameToSystem(PCname);
             int iTag = ManagedPCs.NameToIndex(PCname);
-            bool bHasSSH = true, bHasBOINC=true;
+            bool bHasSSH = true, bHasBOINC = true;
             CheckBox cb;
             RadioButton rb;
             Color ThisColor, NewColor;
-            if(IsCheckbox)
+            if (IsCheckbox)
             {
                 cb = ThisCB(iTag);
                 ThisColor = cb.ForeColor;
                 NewColor = ManagedPCs.GetColor(PCname);
                 if (NewColor == ThisColor) return true;
-                if(!hi.HasBOINC && !hi.HasSSH)
+                if (!hi.HasBOINC && !hi.HasSSH)
                 {
                     cb.Enabled = false;
                     cb.ForeColor = Color.Black;
@@ -528,7 +554,7 @@ namespace CreditStatistics
                                     cb.Checked = false;
                                     break;
                                 case "Invert":
-                                    cb.Checked = !@cb.Checked;
+                                    cb.Checked = !cb.Checked;
                                     break;
                             }
                         }
@@ -539,11 +565,13 @@ namespace CreditStatistics
 
         private void PerformRescan()
         {
+            pbUSE.Maximum = ManagedPCs.LocalSystems.Count + 1;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
                 hi.BOINCvalid = false;
                 hi.SSHvalid = false;
             }
+            CancelLocal = false;
             if (isCB)
                 IsOnline();
             else
@@ -560,6 +588,13 @@ namespace CreditStatistics
         private void btnReScan_Click(object sender, EventArgs e)
         {
             PerformRescan();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            CancelLocal = true;
+            NotifyForms(false, LastChecked, LastCount, true);
+            StopPBuse();
         }
     }
 }

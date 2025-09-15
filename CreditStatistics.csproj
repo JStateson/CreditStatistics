@@ -17,6 +17,14 @@
   <DebugSymbols>true</DebugSymbols>
 </PropertyGroup>
 
+<ItemGroup>
+  <None Remove="blank.docx" />
+</ItemGroup>
+
+<ItemGroup>
+  <EmbeddedResource Include="blank.docx" />
+</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright" Version="1.54.0" />
     <PackageReference Include="System.Management" Version="10.0.0-preview.6.25358.103" />

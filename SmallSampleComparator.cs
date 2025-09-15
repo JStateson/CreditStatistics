@@ -6,7 +6,30 @@ using System.Threading.Tasks;
 
 namespace CreditStatistics
 {
-    internal class SmallSampleComparator    {
+    internal class StatsHelper    {
+
+
+        /// <summary>
+        /// Calculates the minimum number of samples needed to achieve a desired standard deviation of the mean.
+        /// </summary>
+        /// <param name="currentSampleSize">Current number of samples used to compute currentMeanStdDev.</param>
+        /// <param name="currentMeanStdDev">Current standard deviation of the mean (SE) with currentSampleSize samples.</param>
+        /// <param name="desiredMeanStdDev">Desired standard deviation of the mean.</param>
+        /// <returns>Minimum number of samples needed.</returns>
+        public static int MinimumSamplesForDesiredStdDev(int currentSampleSize, double currentMeanStdDev, double desiredMeanStdDev)
+        {
+            if (desiredMeanStdDev <= 0) throw new ArgumentException("Desired standard deviation must be positive.");
+            if (currentMeanStdDev <= 0) throw new ArgumentException("Current standard deviation must be positive.");
+            if (currentSampleSize <= 0) throw new ArgumentException("Current sample size must be positive.");
+
+            // Estimate population standard deviation
+            double sigmaPopulation = currentMeanStdDev * Math.Sqrt(currentSampleSize);
+
+            // Calculate required sample size
+            double nRequired = Math.Pow(sigmaPopulation / desiredMeanStdDev, 2);
+
+            return (int)Math.Ceiling(nRequired); // round up to next integer
+        }
 
         public struct SampleSummary
         {

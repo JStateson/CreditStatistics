@@ -25,7 +25,7 @@ namespace CreditStatistics
 
         public void AllowedPCs_changed(object sender, PCsChangedEventArgs e)
         {
-            ChangeOccured(e.NumChecked);
+
         }
 
 
@@ -168,10 +168,15 @@ namespace CreditStatistics
             ManagedPCs.RunSshAndGetOutput(PCname, sCommand, "c");
         }
 
-
+        private bool CancelOp(string sMsg)
+        {
+            DialogResult dr = MessageBox.Show(sMsg, "Click Yes to confirm",MessageBoxButtons.YesNoCancel);
+            return (dr != DialogResult.Yes);          
+        }
 
         private void btnPCoff_Click(object sender, EventArgs e)
         {
+            if (CancelOp("About to shutdown a lot of PCs, are you sure?"))return;
             BaseProgressBar.Value = 0;
             foreach (cPClimit PCl in PandoraDatabase)
             {
@@ -185,6 +190,7 @@ namespace CreditStatistics
 
         private void btnPCreset_Click(object sender, EventArgs e)
         {
+            if (CancelOp("About to restart a lot of PCs, are you sure?")) return;
             BaseProgressBar.Value = 0;
             foreach (cPClimit PCl in PandoraDatabase)
             {
@@ -198,6 +204,7 @@ namespace CreditStatistics
 
         private void btnBoincRestart_Click(object sender, EventArgs e)
         {
+            if (CancelOp("About to restart boinc on a lot of PCs, are you sure?")) return;
             BaseProgressBar.Value = 0;
             foreach (cPClimit PCl in PandoraDatabase)
             {
@@ -249,13 +256,6 @@ namespace CreditStatistics
                 File.Delete("C:\\ProgramData\\boinc\\pandora_config");
             }
             ManagedPCs.RestartBoinc(PCname);
-        }
-
-
-
-        private void ChangeOccured(int n)
-        {
-            lbSelectedPCs.Text = "Systems selected: " + n.ToString();
         }
 
         private async void btnSuspProj_Click(object sender, EventArgs e)

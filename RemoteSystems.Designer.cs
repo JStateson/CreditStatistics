@@ -58,7 +58,6 @@
             version = new DataGridViewTextBoxColumn();
             tabPage2 = new TabPage();
             btnIDNotepad = new Button();
-            btnFetchAC = new Button();
             groupBox1.SuspendLayout();
             tabRemote.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -340,25 +339,11 @@
             btnIDNotepad.UseVisualStyleBackColor = true;
             btnIDNotepad.Click += btnIDNotepad_Click;
             // 
-            // btnFetchAC
-            // 
-            btnFetchAC.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold);
-            btnFetchAC.ForeColor = Color.Blue;
-            btnFetchAC.Location = new Point(205, 12);
-            btnFetchAC.Margin = new Padding(4, 3, 4, 3);
-            btnFetchAC.Name = "btnFetchAC";
-            btnFetchAC.Size = new Size(120, 65);
-            btnFetchAC.TabIndex = 42;
-            btnFetchAC.Text = "Click here for\r\napp configs\r\nused in sprint";
-            btnFetchAC.UseVisualStyleBackColor = true;
-            btnFetchAC.Click += btnFetchAC_Click;
-            // 
             // RemoteSystems
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1209, 594);
-            Controls.Add(btnFetchAC);
             Controls.Add(btnIDNotepad);
             Controls.Add(btnReadBoinc);
             Controls.Add(tabRemote);
@@ -413,6 +398,5 @@
         private DataGridViewTextBoxColumn nGPUs;
         private DataGridViewTextBoxColumn version;
         private Button btnIDNotepad;
-        private Button btnFetchAC;
     }
 }

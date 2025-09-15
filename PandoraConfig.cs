@@ -327,6 +327,11 @@ namespace CreditStatistics
                 {
                     if (!clp.UsedInSprint) continue;
                     bool b = clp.AppType == "cpu";
+                    if(clp.ShowUsedCpuGpu == "")
+                    {
+                        MessageBox.Show("No Data for cpu or cpu");
+                        break;
+                    }
                     string[] sN = clp.ShowUsedCpuGpu.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries);
                     int sn1 = int.Parse(sN[0]);
                     int sn2 = int.Parse(sN[1]);
@@ -432,13 +437,14 @@ namespace CreditStatistics
                 return n;
             }
 
+            /*
             public bool Parse_AC(ref string sTemp, out XDocument doc)
             {
                 doc = null;
                 int i = sTemp.IndexOf("<app_config>");
                 if (i == -1)
                 {
-                    cc_config = null;
+                    app_config = null;
                     return false;
                 }
                 Debug.Assert(i >= 0);
@@ -450,6 +456,7 @@ namespace CreditStatistics
                 return true;
             }
 
+            
             public bool Parse_CC_PC(ref string sTemp)
             {
                 int i = sTemp.IndexOf("<cc_config>");
@@ -473,6 +480,7 @@ namespace CreditStatistics
                 }
                 return true;
             }
+            */
 
             public cCalcLimitProj AddProject(string PCname, string ShortName, string masterUrl, string studyV)
             {
@@ -597,7 +605,7 @@ namespace CreditStatistics
             {
                 string NL = Environment.NewLine;
                 string sOut = "message_filters:has reached a limit,your preferences are set,No tasks sent,No work sent,see scheduler log,#" + NL;
-                sPathname = globals.WhereDOC + "\\pandora_config_" + PCname;
+                sPathname = Path.Combine(WherePandoraData, "pandora_config_" + PCname + ".txt");
                 sOut += "earliest_deadline_first\r\nbunker_strategy:5\r\ndebug\r\nbunker_release: " +
                     UTC_bunker_release + NL + "bunker_end: " + bunker_end + NL;
                 if (!IsSelected)
@@ -619,11 +627,16 @@ namespace CreditStatistics
                 return sOut + "#" + NL;
             }
 
+            private bool IsEmptyProject(cCalcLimitProj ep)
+            {
+                return (ep.Cnt == 0 && ep.PrevCnt == "");
+            }
+
             public string CreatePDstream(out string sPathname)
             {
                 string NL = Environment.NewLine;
                 string sOut = "message_filters:has reached a limit,your preferences are set,No tasks sent,No work sent,see scheduler log,#" + NL;
-                sPathname = globals.WhereDOC + "\\pandora_config_" + PCname + ".txt";
+                sPathname = Path.Combine(WherePandoraData,"pandora_config_" + PCname + ".txt");
                 sOut += "earliest_deadline_first\r\nbunker_strategy:1\r\ndebug\r\nbunker_release: " +
                     UTC_bunker_release + NL + "bunker_end: " + bunker_end + NL; // always positive
                 sOut += "#concurrent_gpu_tasks: " + ConcurrentGpuTasks.ToString() + NL;
@@ -634,7 +647,11 @@ namespace CreditStatistics
                 foreach (cCalcLimitProj ep in ProjList)   // each project
                 {
                     if (ep.ProjectDisabled)
+                    {
+                        if (IsEmptyProject(ep))
+                            continue;
                         sOut += NL + NL + "#project: " + ep.ProjUrl + NL;
+                    }
                     else
                         sOut += NL + NL + "project: " + ep.ProjUrl + NL;
                     bool SetBlock = ep.BlockCnt > 0;
@@ -982,7 +999,7 @@ namespace CreditStatistics
 
         public string ReadPandoraConfig(ref cPClimit PCx, out string filePath)
         {
-            filePath = globals.WhereDOC + "\\pandora_config_" + PCx.PCname;
+            filePath = Path.Combine(WherePandoraData, "pandora_config_" + PCx.PCname + ".txt");
             if(File.Exists(filePath))
                 return File.ReadAllText(filePath);
             return "";
@@ -993,7 +1010,7 @@ namespace CreditStatistics
             cPClimit pClimit;
             cPClimit FormattedPCl; // in the proper order with any new projects added
             List<cPClimit> ThisPC = new List<cPClimit>();
-            string[] files = Directory.GetFiles(globals.WhereEXE, "pandora_config*.txt");
+            string[] files = Directory.GetFiles(globals.WherePandoraData, "pandora_config*.txt");
             foreach (string filePath in files)
             {
                 string filename = Path.GetFileName(filePath);
@@ -1051,6 +1068,7 @@ namespace CreditStatistics
         }
         */
 
+        // this is called from an acquisition app "async" so the source is not from the disk drive.
         public cPClimit AddPC(string PCname, string nCPU, string nGPU, string sOStype, string IPaddress)
         {
             int iCPU = Convert.ToInt32(nCPU);
@@ -1104,7 +1122,7 @@ namespace CreditStatistics
                     EachProj.init(aline.Substring(i + 8).Trim(), i == 1);
                     EachProj.UsedInGames = PCname == "templet";
                     ThisPC.ProjList.Add(EachProj);
-                    int j = ProjectStats.GetNameIndex(EachProj.ProjUrl);
+                    int j = ProjectStats.GetUrlIndex(EachProj.ProjUrl);
                     if (j < 0)
                     {
                         ProjectStats.sErrMsg += "badly formed or missing project info at line " + nLineCnt + Environment.NewLine;

@@ -96,7 +96,7 @@ namespace CreditStatistics
 
         private int FNlookup(string s, ref int NumUnk)
         {
-            int i = ProjectStats.GetNameIndex(s);
+            int i = ProjectStats.GetUrlIndex(s);
             if (i < 0)
             {
                 NumUnk++;
@@ -141,7 +141,7 @@ namespace CreditStatistics
                 int i = line.IndexOf("master url:");
                 if (i > 0)
                 {
-                    int iNamePS = ProjectStats.GetNameIndex(line);
+                    int iNamePS = ProjectStats.GetUrlIndex(line);
                     if (iNamePS == -1)
                     {
                         sUnk += "Cannot identify project " + line + NL;

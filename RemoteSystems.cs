@@ -64,8 +64,8 @@ namespace CreditStatistics
 
         private async void InitialLoad(object sender, EventArgs e)
         {
-            BoincTaskFolder.Text = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\eFMer\\BoincTasks";
-            WorkingFolderLoc.Text = globals.WhereDOC;
+            BoincTaskFolder.Text = globals.WhereBoincTaskFolder;
+            WorkingFolderLoc.Text = globals.WhereExe;
             tbWhereBoinc.Text = PathToBoincData;
             AppendColoredText(rtbLocalHostsBT, "Local PCs using 31416:" + NL + NL, Color.Blue);
             MakeDGV();
@@ -195,7 +195,7 @@ namespace CreditStatistics
                     int sLoc = SNlocs[i];
                     string sName = ProjectStats.ShortName(sLoc);
                     ManagedPCs.strResult += "ProjName:" + sName + " ProjID:" + sProj + NL;
-                    bool HasAppConfig = File.Exists(globals.GetAppConfigFilename(PCname, sName));
+                    bool HasAppConfig = File.Exists(globals.FormAppConfigFilename(PCname, sName));
                     ManagedPCs.AddProj(PCname, sName, sProj, sLoc, ProjectStats.ProjectList[sLoc].sStudyV, HasAppConfig);
                 }
                 if (n == 0)
@@ -368,7 +368,7 @@ namespace CreditStatistics
                 int sLoc = SNlocs[i];
                 string sName = ProjectStats.ShortName(sLoc);
                 sOut += "ProjName:" + sName + " ProjID:" + sProj + NL;
-                bool hasAppConfig = File.Exists(globals.GetAppConfigFilename(shost, sName));
+                bool hasAppConfig = File.Exists(globals.FormAppConfigFilename(shost, sName));
                 ManagedPCs.AddProj(shost, sName, sProj, sLoc, ProjectStats.ProjectList[sLoc].sStudyV, hasAppConfig);
             }
             return sOut.Trim();
@@ -422,7 +422,7 @@ namespace CreditStatistics
                     j = line.IndexOf(";");
                     Debug.Assert(j > 0);
                     string sUrl = line.Substring(i + 4, j - i - 4);
-                    int k = ProjectStats.GetNameIndex(sUrl);
+                    int k = ProjectStats.GetUrlIndex(sUrl);
                     if (k < 0)
                     {
                         sErr += "Unknown project: " + sUrl + NL;
@@ -516,37 +516,6 @@ namespace CreditStatistics
             SendNotepad.PasteToNotepad(rtbLocalHostsBT.Text);
         }
 
-        private async void btnFetchAC_Click(object sender, EventArgs e)
-        {
-            PandoraRPC pandoraRPC = new PandoraRPC();
-            pandoraRPC.Init(ref ProjectStats);
-            Color fC;
-            rtbLocalHostsBT.Clear();
-            foreach (cPClimit PCl in ProjectStats.PandoraDatabase)
-            {
-                string PCname = PCl.PCname;
-                foreach(cCalcLimitProj CLp in PCl.ProjList)
-                {
-                    string ShortName = CLp.ShortName;
-                    await pandoraRPC.FetchOne_app_config(PCname, ShortName);
-                    if(PCl.ErrorStatus < ERR_critical)
-                    {
-                        string[] ssAppConfig = PCl.strResult.Split(new string[] { "\n", "\r", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        string sOut = globals.WriteACrecord(GetAppConfigFilename( PCname, ShortName), ref ssAppConfig);
-                        fC = Color.Blue;
-                        if (PCl.ErrorStatus == ERR_warning)
-                            fC = Color.Black;
-                        AppendColoredText(rtbLocalHostsBT, sOut, fC);
-                    }
-                    else
-                    {
-                        fC = Color.Red;
-                        AppendColoredText(rtbLocalHostsBT, "PC " + PCname + " Proj: " + ShortName + " has  no app_config\r\n", fC);
-                    }
-                    await Task.Delay(500);
-                }
-            }
-        }
     }
 
 }

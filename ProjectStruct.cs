@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Runtime.Intrinsics.X86;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using static CreditStatistics.globals;
@@ -19,6 +20,7 @@ namespace CreditStatistics
     internal class cProjectStruct
     {
         const int NUM_ENTRIES = 10; // number of entries in the KnownProjects array
+        public int LengthLongestShortname = 10;
         public List<cPSlist> ProjectList = new List<cPSlist>();
         public cAllProjectStudyInfo ProjectStudyDB = new cAllProjectStudyInfo();
         public cManagedPCs ManagedPCs = new cManagedPCs();
@@ -38,7 +40,7 @@ namespace CreditStatistics
         public DateTimeOffset UTCend;        
         public string DateLastPortScan = "not fully scanned";
         public string boinc_passwd = Properties.Settings.Default.BoincWebPassword;
-        public string boinc_email = Properties.Settings.Default.BoincWebUsername;
+        public string boinc_email = Properties.Settings.Default.BoincWebUsername;      
 
 
         public static readonly string[] KnownProjects = @"
@@ -394,27 +396,44 @@ message_filters:has reached a limit,your preferences are set,No tasks sent,No wo
 
 project: https://minecraftathome.com/minecrafthome/
 block_reports: 1000
+limit: 10
+#app_type: gpu
 
 project: https://numberfields.asu.edu/NumberFields/
 block_reports: 1000
+limit: 10
+#app_type: gpu
 
 project: http://boincvm.proxyma.ru:30080/test4vm/
 block_reports: 1000
+limit: 10
+#app_type: gpu
 
 project: https://srbase.my-firewall.org/sr5/
 block_reports: 1000
+limit: 10
+#app_type: gpu
 
 project: https://sech.me/boinc/Amicable/
 block_reports: 1000
+limit: 10
+#app_type: gpu
 
 project: https://einstein.phys.uwm.edu/
 block_reports: 1000
+limit: 10
+@app_type: gpu
 
 project: https://milkyway.cs.rpi.edu/milkyway/
 block_reports: 1000
+limit: 10
+#app_type: cpu
 
 project: https://escatter11.fullerton.edu/nfs/
 block_reports: 1000
+limit: 10
+#app_type: cpu
+
 #
 ";
 
@@ -527,15 +546,13 @@ you can edit it and then send it if desired
         {
             int i, j, n = KnownProjects.Length;
             cProjectStruct localProjectStats = this;
+            if(boinc_email == null)
+            {
+                boinc_email = Environment.UserName;
+                Properties.Settings.Default.BoincWebUsername = boinc_email;
+            }
             sshCredentials.Init();
-            string where_ID_Study_config = globals.WhereDOC + "\\" + name_ID_Study_config;
-            globals.WhereDefaultHostList = globals.WhereDOC + "\\" + WhereDefaultHostList;
-            globals.WhereMasterPandora = globals.WhereDOC + "\\" + WhereMasterPandora;
-            globals.WhereCurrentDefaultCC_config = globals.WhereDOC + "\\" + WhereCurrentDefaultCC_config;
-            globals.WhereCurrentDefaultDatabaseConfig = globals.WhereDOC + "\\" + WhereCurrentDefaultDatabaseConfig;
-            globals.WhereAppVersions = globals.WhereDOC + "\\" + WhereAppVersions;
-            globals.WhereCurrentDefaultPandoraConfig = globals.WhereDOC + "\\" + WhereCurrentDefaultPandoraConfig;
-            globals.WhereProjectAccessParams = globals.WhereDOC + "\\" + WhereProjectAccessParams;
+
 
             if (!File.Exists(WhereCurrentDefaultPandoraConfig))
                 File.WriteAllText(WhereCurrentDefaultPandoraConfig, DefaultPandoraConfig.Trim());
@@ -598,6 +615,8 @@ you can edit it and then send it if desired
                 {
                     IsSelected = false,
                     UsedInSprint = false,
+                    MinWUsNeeded = 10,
+                    app_type = "",
                     MasterUrl = "",
                     shortname = "",
                     name = KnownProjects[i++].ToLower(),
@@ -617,6 +636,7 @@ you can edit it and then send it if desired
             for (i = 0; i < n; i++)
             {
                 ProjectList[i].shortname = ShortName(i);
+                LengthLongestShortname = Math.Max(LengthLongestShortname, ShortName(i).Length);
                 ProjectList[i].AppConfigVersions = NoResponse;
             }
 
@@ -646,8 +666,25 @@ you can edit it and then send it if desired
                 PSl.sStudyV = lp.sStudy;
                 SetSprintUsage(lp.ShortName, true);
             }
+            if(File.Exists(WhereMasterPandora))
+            {
+                string sBuff = File.ReadAllText(WhereMasterPandora); ;
+                cPClimit SamplePC = pc.ParsePandoraConfig(sBuff, "sample");
+                foreach (cCalcLimitProj lp in SamplePC.ProjList)
+                {
+                    int ProjectIndex = GetUrlIndex(lp.ProjUrl);
+                    Debug.Assert(ProjectIndex >= 0, "cannot find project in url");
+                    ProjectList[ProjectIndex].MinWUsNeeded = lp.LimitValue;
+                    string app_type = lp.AppType;
+                    string ProjName = ShortName(ProjectIndex);
+                    if (app_type == "")
+                        app_type = GetDefaultAppType(ProjName);
+                    ProjectList[ProjectIndex].app_type = app_type;
+                }
+            }
+         
             pc = null;
-            ProjectStudyDB.init(ref localProjectStats, where_ID_Study_config);
+            ProjectStudyDB.init(ref localProjectStats, WhereProjStudyID);
         }
 
         public void AddCpuGpu()
@@ -686,6 +723,28 @@ you can edit it and then send it if desired
             return "";
         }
 
+        public bool GetIndexToStudy(string ProjName, out int SelectedIndex, out int NumStudies)
+        {
+            int iLoc = ShortnameToIndex(ProjName);
+            cPSlist p = ProjectList[iLoc];
+            string[] sStudyL = p.sStudyL.Split(' ');
+            NumStudies = sStudyL.Length;
+            if (NumStudies == 0)
+            {
+                SelectedIndex = 0;
+                return true;
+            }
+            SelectedIndex = 0;
+            foreach(string s in sStudyL)
+            {
+                if (s == p.sStudyV)
+                    return true;
+                SelectedIndex++;
+            }
+            Debug.Assert(false, "internal error: cannof find study associated with project");
+            return false;
+        }
+
         public int ShortnameToIndex(string sn)
         {
             for (int i = 0; i < ProjectList.Count; i++)
@@ -717,10 +776,28 @@ you can edit it and then send it if desired
             return s[0];
         }
 
-        public int GetNameIndex(string tUrl)
+        public bool IsCPUonly(string ProjName)
+        {
+            string[] CpuOnly = {"milkyway", "nfs", "wuprop", "rosetta" ,"cpdn", "denis", "gene", "gerasim",
+                "loda", "odlk", "odlk1", "radioactive", "rakesearch", "rmaworld", "rnma", "sidock",
+            "yafu", "yoyo"};
+            return CpuOnly.Contains(ProjName);
+        }
+
+        public string GetDefaultAppType(string ProjName)
+        {
+            return IsCPUonly(ProjName) ? "cpu" : "gpu";
+        }
+
+        public int GetNameIndex(string sn)
+        {
+            return GetUrlIndex(sn);
+        }
+
+        public int GetUrlIndex(string sUrl)
         {
             int i = 0;
-            string s = tUrl.ToLower();
+            string s = sUrl.ToLower();
             string[] sTemp;
             foreach (cPSlist c in ProjectList)
             {
@@ -839,6 +916,7 @@ you can edit it and then send it if desired
         }
 
         */
+
 
         public void WriteHostList(ref string[] sTemp)
         {

@@ -111,6 +111,11 @@ namespace CreditStatistics
 
         private void FormUrl(string sMaster, string sCmd, string sID)
         {
+            if (sCmd.Contains("http"))
+            {
+                LaunchDefaultBrowser(sCmd);
+                return;
+            }
             if (sCmd.EndsWith("="))
                 sCmd += sID;
             string sOut = Path.Combine(sMaster + sCmd);

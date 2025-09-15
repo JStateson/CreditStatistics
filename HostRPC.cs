@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using static CreditStatistics.cParseConfigs;
 using static CreditStatistics.globals;
 using static CreditStatistics.PandoraConfig;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -33,13 +34,12 @@ namespace CreditStatistics
         private List<cPClimit> PandoraDatabase;
         private cProjectStruct ProjectStats;
         private string UnixIOout = "";
-
+        public cParseConfigs ParseConfigs = new cParseConfigs();
         public void TextToUnix(string input)
         {
             UnixIOout = globals.NewLineToLinux(input);
         }
 
-        private string cc_read = "<get_cc_config/>";
         private int port = 31416;
         public class CmdRequest
         {
@@ -140,6 +140,28 @@ namespace CreditStatistics
             await SystemAsync(cts.Token);
         }
 
+
+        public async Task FetchOne_cc_config(string PCname)
+        {
+            cmdRequest = new CmdRequest();
+            cmdRequest.Fetch_CC = true; 
+            cmdRequest.CmdPCname = PCname;
+            cmdRequest.ReqIndex = nameTOindex(PCname);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await SystemAsync(cts.Token);
+        }
+
+        public async Task WriteOne_cc_config(string PCname)
+        {
+            cmdRequest = new CmdRequest();
+            cmdRequest.Write_CC = true;
+            cmdRequest.CmdPCname = PCname;
+            cmdRequest.ReqIndex = nameTOindex(PCname);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await SystemAsync(cts.Token);
+        }
+
+
         public async Task WriteOne_app_config(string PCname, string shortname)
         {
             cmdRequest = new CmdRequest();
@@ -221,12 +243,61 @@ namespace CreditStatistics
             try
             {
                 using var client = new TcpClient();
-
                 await client.ConnectAsync(IPaddress, port);
                 using var stream = client.GetStream();
 
+                if (cmdRequest.Fetch_CC)
+                {
+                    data = cmdRequest.FormReq("<get_cc_config/>");
+                    await stream.WriteAsync(data, 0, data.Length, token);
+                    await stream.FlushAsync(token);
+                    bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    if (GetErrorInfo(response, out string sErr))
+                    {
+                        pcx.strResult = sErr;
+                        pcx.ErrorStatus = ERR_warning;
+                        response = "<!-- this is the default cc_config -->\n" + cProjectStruct.DefaultCCconfig;
+                    }
 
-                if(cmdRequest.Fetch_AC)
+                    cCCconfig cc = ParseConfigs.ParseCCconfig(response);
+                    if (cc.bValid)
+                    {
+                        pcx.cc_config = cc.cc_config;
+                        pcx.pc_config = cc.pc_config;
+                        globals.WriteCCrecord(pcx.PCname, ref pcx.cc_config);
+                        if (pcx.pc_config != null)
+                        {
+                            WritePCrecordS(pcx.PCname, ref pcx.pc_config);
+                        }
+                        pcx.ErrorStatus = 0;
+
+                    }
+                    else pcx.ErrorStatus = ERR_critical;
+                }
+
+                if (cmdRequest.Write_CC)
+                {
+                    if (UnixIOout == "")
+                    {
+                        pcx.strResult = "Error: output buffer UnixIOout was empty" + Environment.NewLine;
+                        return;
+                    }
+                    data = cmdRequest.FormReq(cc_write(UnixIOout));
+                    await stream.WriteAsync(data, 0, data.Length, token);
+                    bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    if (response.Contains("success"))
+                        pcx.ErrorStatus = 0;
+                    else
+                    {
+                        pcx.ErrorStatus = ERR_critical;
+                        pcx.strResult = "cannot send cc_config to " + pcx.PCname + " at " + pcx.IPaddress;
+                    }
+                }
+
+
+                if (cmdRequest.Fetch_AC)
                 {
                     string sUrl = "";
                     cCalcLimitProj clp = pcx.GetProjStruct(cmdRequest.AC_ShortName);
@@ -384,9 +455,22 @@ namespace CreditStatistics
                             pc.ErrorStatus = ERR_warning;
                             response = cProjectStruct.DefaultAPPconfig;
                         }
+
+                        cAppConfig ap = ParseConfigs.ParseAppConfig(response);
+                        if(ap.bValid)
+                        {
+                            clp.cpu_usage = ap.dCPU;
+                            clp.avg_ncpus = ap.dCPU;
+                            clp.gpu_usage = ap.dGPU;
+                            clp.ngpus = ap.dGPU;
+                            clp.MaxApps = ap.MaxApps;
+                            pc.app_config = ap.AppConfig;
+                            WriteACrecord(FormAppConfigFilename(pc.PCname, cmdRequest.AC_ShortName), ref ap.AppConfig);
+                        }
+
+                        /*
                         if (pc.Parse_AC(ref response, out XDocument doc))
                         {
-                            globals.WriteACrecord(GetAppConfigFilename( pc.PCname, cmdRequest.AC_ShortName), ref pc.app_config);
                             double defaultDouble = -1.0;
                             int defaultInt = -1;
 
@@ -413,6 +497,7 @@ namespace CreditStatistics
                             if(projectMaxConcurrent > 0)
                                 clp.MaxApps = projectMaxConcurrent;
                         }
+                        */
                     }
 
 
@@ -430,13 +515,18 @@ namespace CreditStatistics
                             pc.ErrorStatus = ERR_warning;
                             response = "<!-- this is the default cc_config -->\n" + cProjectStruct.DefaultCCconfig;
                         }
-                        if (pc.Parse_CC_PC(ref response))
+
+                        //if (pc.Parse_CC_PC(ref response))
+                        cCCconfig cc = ParseConfigs.ParseCCconfig(response);
+                        if(cc.bValid)
                         {
+                            pc.cc_config = cc.cc_config;
+                            pc.pc_config = cc.pc_config;
                             globals.WriteCCrecord(pc.PCname, ref pc.cc_config);
                             if (pc.pc_config != null)
                             {
                                 bPCmissing = false;
-                                globals.WritePCrecordS(pc.PCname, ref pc.pc_config);
+                                WritePCrecordS(pc.PCname, ref pc.pc_config);
                             }
                             else bPCmissing = true;
                             pc.ErrorStatus = bPCmissing ? ERR_warning : 0;

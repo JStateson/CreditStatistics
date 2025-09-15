@@ -24,56 +24,35 @@ namespace CreditStatistics
         private bool DoHeadless = true;
         private string NL = Environment.NewLine;
         private RunList sig;
+
+        public void Init(ref RunList Rsig)
+        {
+            sig = Rsig;
+        }
         
-        public void ReadProjectThisSite(string shortname, string sUrl, ref RunList Rsig)
+        public async Task ReadProjectThisSite(string shortname, string sUrl)
         {
             Url = sUrl;
             ProjectName = shortname;
             sMsgOut = "";
-            sig = Rsig;
             sig.bDone = false;
-            RunAsync();
-        }
-
-        public void SignalTaskDone()
-        {
-            if (!cts.IsCancellationRequested)
-            {
-                timeoutTimer?.Dispose(); // Dismiss the timer
-            }
+            await RunAsync(sig.TimeoutSecs);
         }
 
         public void Cancel()
         {
-
-            try
+            if (cts != null && !cts.IsCancellationRequested)
             {
-                // Try accessing something to check if it's disposed
-                var token = cts.Token;  // This will throw if disposed
-                if (cts.Token.CanBeCanceled)
-                    cts.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-               
-            }
-            if (!cts.IsCancellationRequested)
-            {
-                timeoutTimer?.Dispose(); // Dismiss the timer
+                cts.Cancel();
+                sMsgOut += "Manual cancel requested." + NL;
             }
         }
 
-        public async Task RunAsync()
+        /*
+        public async Task RunAsync(int t)
         {
-            cts = new CancellationTokenSource();
-
-            // Set up a timer to cancel after 20 seconds
-            timeoutTimer = new System.Threading.Timer(state =>
-            {
-                sMsgOut += "Timeout reached. Cancelling operation." + NL;
-                cts.Cancel();
-                sig.bDone = true;
-            }, null, TimeSpan.FromSeconds(20), Timeout.InfiniteTimeSpan);
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(t));  // cancels automatically after t seconds
 
             try
             {
@@ -84,27 +63,40 @@ namespace CreditStatistics
                 sMsgOut += "Operation was cancelled due to timeout." + NL;
                 sig.bDone = true;
             }
+        }
+        */
+
+        public async Task RunAsync(int t)
+        {
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(t));  // Auto cancel after t seconds
+
+            try
+            {
+                await DoPlaywrightWorkAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                sMsgOut += "Operation was cancelled." + NL;
+                sig.bDone = true;
+            }
             finally
             {
-                //timeoutTimer?.Dispose();
-                //cts.Dispose();
-            }
-
-            if(cts.Token.IsCancellationRequested)
-            {
-
+                cts.Dispose();
+                cts = null;
             }
         }
 
 
         private async Task DoPlaywrightWorkAsync(CancellationToken token)
         {
+            
             if (ProjectName == "primegrid" || ProjectName == "cpdn")
                 TaskStart(token);  //TaskStartPrime(token);
             else if (ProjectName == "mine")
-                TaskStartMine(token);
-            else            
-                TaskStart(token);            
+                await TaskStartMine(token);
+            else                
+                await TaskStart(token); // added await 9/9 and had to add Task to TaskStart
         }
 
         private void TaskStartPrime(CancellationToken token)
@@ -116,20 +108,32 @@ namespace CreditStatistics
             }, token);
         }
 
-        private void TaskStart(CancellationToken token)
+        // Change the signature of TaskStart from 'private async void TaskStart(CancellationToken token)' to 'private async Task TaskStart(CancellationToken token)'
+        // This allows it to be awaited.
+
+        private async Task TaskStart(CancellationToken token) // changed from async void to async Task
         {
-            Task longRunningTask = Task.Run(async () =>
+            try
             {
-                await ReadOnePageNoPassword(token);
-            }, token);
+                Task longRunningTask = Task.Run(async () =>
+                {
+                    await ReadOnePageNoPassword(token);
+                }, token);
+                await longRunningTask;
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
-        private void TaskStartMine(CancellationToken token)
+        private async Task TaskStartMine(CancellationToken token)
         {
             Task longRunningTask = Task.Run(async () =>
             {
                 await ReadOnePageNoPasswordMine(token);
             }, token);
+            await longRunningTask;
         }
 
         private async Task ReadOnePageNoPasswordMine(CancellationToken token)
@@ -196,10 +200,10 @@ namespace CreditStatistics
 
         private async Task ReadOnePageNoPassword(CancellationToken token)
         {
+
             using var playwright = await Playwright.CreateAsync();
 
             token.ThrowIfCancellationRequested();
-
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = DoHeadless // set true to run without UI
@@ -207,14 +211,12 @@ namespace CreditStatistics
 
             token.ThrowIfCancellationRequested();
 
-
             var context = await browser.NewContextAsync(new BrowserNewContextOptions
             {
                 IgnoreHTTPSErrors = true
             });
 
             var page = await context.NewPageAsync();
-
 
             token.ThrowIfCancellationRequested();
             try
@@ -227,11 +229,12 @@ namespace CreditStatistics
             }
 
             
-            //await Task.Delay(500);
+
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             token.ThrowIfCancellationRequested();
             sRawPage = await page.ContentAsync();
+
             await browser.CloseAsync();
             sig.bDone = true;
         }

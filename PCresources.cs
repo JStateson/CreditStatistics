@@ -11,7 +11,7 @@ namespace CreditStatistics
 {
     internal class PCresources
     {
-        private static string filePath = globals.WhereDOC + "\\" + "PC_CPU_GPU.cfg";
+        private static string filePath = globals.WherePcCpuGpu;
         public class cCpuGpu
         {
             public string sPC;

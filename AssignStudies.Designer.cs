@@ -1,6 +1,6 @@
 ﻿namespace CreditStatistics
 {
-    partial class SprintStudy
+    partial class AssignStudies
     {
         /// <summary>
         /// Required designer variable.
@@ -28,9 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            btnCancel = new Button();
-            gbList = new GroupBox();
-            btnSave = new Button();
             gpEdit = new GroupBox();
             groupBox3 = new GroupBox();
             tbProjName = new TextBox();
@@ -46,45 +43,12 @@
             NameStudy = new DataGridViewTextBoxColumn();
             CPUs = new DataGridViewTextBoxColumn();
             GPUs = new DataGridViewTextBoxColumn();
-            lbPCs = new ListBox();
-            btnApplyAll = new Button();
             gpEdit.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvStudyInfo).BeginInit();
             SuspendLayout();
-            // 
-            // btnCancel
-            // 
-            btnCancel.ForeColor = SystemColors.Highlight;
-            btnCancel.Location = new Point(1066, 127);
-            btnCancel.Name = "btnCancel";
-            btnCancel.Size = new Size(123, 42);
-            btnCancel.TabIndex = 10;
-            btnCancel.Text = "Cancel Changes";
-            btnCancel.UseVisualStyleBackColor = true;
-            btnCancel.Click += btnCancel_Click;
-            // 
-            // gbList
-            // 
-            gbList.Location = new Point(713, 52);
-            gbList.Name = "gbList";
-            gbList.Size = new Size(297, 507);
-            gbList.TabIndex = 9;
-            gbList.TabStop = false;
-            gbList.Text = "LIST";
-            // 
-            // btnSave
-            // 
-            btnSave.ForeColor = SystemColors.Highlight;
-            btnSave.Location = new Point(1066, 52);
-            btnSave.Name = "btnSave";
-            btnSave.Size = new Size(123, 61);
-            btnSave.TabIndex = 8;
-            btnSave.Text = "Save your changes\r\nand exit this form.";
-            btnSave.UseVisualStyleBackColor = true;
-            btnSave.Click += btnSave_Click;
             // 
             // gpEdit
             // 
@@ -94,17 +58,17 @@
             gpEdit.Controls.Add(label2);
             gpEdit.Controls.Add(btnApply);
             gpEdit.Controls.Add(dgvStudyInfo);
-            gpEdit.Location = new Point(12, 42);
+            gpEdit.Location = new Point(769, 12);
             gpEdit.Name = "gpEdit";
-            gpEdit.Size = new Size(548, 591);
-            gpEdit.TabIndex = 11;
+            gpEdit.Size = new Size(548, 606);
+            gpEdit.TabIndex = 12;
             gpEdit.TabStop = false;
             gpEdit.Text = "Update or enter missing values";
             // 
             // groupBox3
             // 
             groupBox3.Controls.Add(tbProjName);
-            groupBox3.Location = new Point(370, 512);
+            groupBox3.Location = new Point(381, 510);
             groupBox3.Name = "groupBox3";
             groupBox3.Size = new Size(145, 79);
             groupBox3.TabIndex = 9;
@@ -122,7 +86,7 @@
             // groupBox2
             // 
             groupBox2.Controls.Add(tbSelectDays);
-            groupBox2.Location = new Point(178, 506);
+            groupBox2.Location = new Point(187, 506);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(145, 79);
             groupBox2.TabIndex = 8;
@@ -173,7 +137,6 @@
             btnApply.TabIndex = 5;
             btnApply.Text = "Save Edits";
             btnApply.UseVisualStyleBackColor = true;
-            btnApply.Click += btnApply_Click;
             // 
             // dgvStudyInfo
             // 
@@ -187,10 +150,9 @@
             dgvStudyInfo.Name = "dgvStudyInfo";
             dgvStudyInfo.RowHeadersVisible = false;
             dgvStudyInfo.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvStudyInfo.Size = new Size(509, 398);
+            dgvStudyInfo.Size = new Size(520, 398);
             dgvStudyInfo.TabIndex = 4;
             dgvStudyInfo.CellDoubleClick += dgvStudyInfo_CellDoubleClick;
-            dgvStudyInfo.RowEnter += dgvStudyInfo_RowEnter;
             // 
             // ID
             // 
@@ -227,42 +189,17 @@
             GPUs.Name = "GPUs";
             GPUs.Width = 72;
             // 
-            // lbPCs
-            // 
-            lbPCs.FormattingEnabled = true;
-            lbPCs.ItemHeight = 15;
-            lbPCs.Location = new Point(1066, 279);
-            lbPCs.Name = "lbPCs";
-            lbPCs.Size = new Size(177, 289);
-            lbPCs.TabIndex = 12;
-            lbPCs.SelectedIndexChanged += lbPCs_SelectedIndexChanged;
-            // 
-            // btnApplyAll
-            // 
-            btnApplyAll.ForeColor = SystemColors.Highlight;
-            btnApplyAll.Location = new Point(1120, 215);
-            btnApplyAll.Name = "btnApplyAll";
-            btnApplyAll.Size = new Size(123, 40);
-            btnApplyAll.TabIndex = 15;
-            btnApplyAll.Text = "Apply default to\r\nall PCs and exit";
-            btnApplyAll.UseVisualStyleBackColor = true;
-            btnApplyAll.Click += btnApplyAll_Click;
-            // 
-            // SprintStudy
+            // AssignStudies
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1263, 645);
-            Controls.Add(btnApplyAll);
-            Controls.Add(lbPCs);
+            ClientSize = new Size(1329, 646);
             Controls.Add(gpEdit);
-            Controls.Add(btnCancel);
-            Controls.Add(gbList);
-            Controls.Add(btnSave);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            Name = "SprintStudy";
-            Text = "SprintStudy";
+            Name = "AssignStudies";
+            Text = "AssignProjects";
+            Controls.SetChildIndex(gbProj, 0);
+            Controls.SetChildIndex(gbPCs, 0);
+            Controls.SetChildIndex(gpEdit, 0);
             gpEdit.ResumeLayout(false);
             gpEdit.PerformLayout();
             groupBox3.ResumeLayout(false);
@@ -277,21 +214,16 @@
 
         #endregion
 
-        private Button btnCancel;
-        private GroupBox gbList;
-        private Button btnSave;
         private GroupBox gpEdit;
+        private GroupBox groupBox3;
+        private TextBox tbProjName;
+        private GroupBox groupBox2;
+        private TextBox tbSelectDays;
+        private GroupBox groupBox1;
+        private TextBox tbSelStudy;
         private Label label2;
         private Button btnApply;
         private DataGridView dgvStudyInfo;
-        private GroupBox groupBox1;
-        private GroupBox groupBox2;
-        private TextBox tbSelectDays;
-        private TextBox tbSelStudy;
-        private GroupBox groupBox3;
-        private TextBox tbProjName;
-        private ListBox lbPCs;
-        private Button btnApplyAll;
         private DataGridViewTextBoxColumn ID;
         private DataGridViewTextBoxColumn DaysDuration;
         private DataGridViewTextBoxColumn NameStudy;

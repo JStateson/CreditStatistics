@@ -32,6 +32,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PasswordInfo));
             label1 = new Label();
             groupBox1 = new GroupBox();
+            btnClearPassWD = new Button();
+            tbUname = new TextBox();
             btnSavePasswd = new Button();
             tbPasswd = new TextBox();
             groupBox2 = new GroupBox();
@@ -46,7 +48,6 @@
             tabPage3 = new TabPage();
             textBox3 = new TextBox();
             imageList1 = new ImageList(components);
-            tbUname = new TextBox();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -62,12 +63,13 @@
             label1.ForeColor = SystemColors.ControlText;
             label1.Location = new Point(17, 32);
             label1.Name = "label1";
-            label1.Size = new Size(257, 105);
+            label1.Size = new Size(215, 60);
             label1.TabIndex = 0;
-            label1.Text = resources.GetString("label1.Text");
+            label1.Text = "This is used for testing only.  If the site\r\naccessed allows data to be shared\r\npublically, then there is no need for any\r\nusernames or password.";
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(btnClearPassWD);
             groupBox1.Controls.Add(tbUname);
             groupBox1.Controls.Add(btnSavePasswd);
             groupBox1.Controls.Add(tbPasswd);
@@ -79,9 +81,27 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "Web credentials";
             // 
+            // btnClearPassWD
+            // 
+            btnClearPassWD.Location = new Point(30, 202);
+            btnClearPassWD.Name = "btnClearPassWD";
+            btnClearPassWD.Size = new Size(59, 23);
+            btnClearPassWD.TabIndex = 4;
+            btnClearPassWD.Text = "Clear";
+            btnClearPassWD.UseVisualStyleBackColor = true;
+            btnClearPassWD.Click += btnClearPassWD_Click;
+            // 
+            // tbUname
+            // 
+            tbUname.Location = new Point(160, 156);
+            tbUname.Name = "tbUname";
+            tbUname.Size = new Size(128, 23);
+            tbUname.TabIndex = 3;
+            tbUname.Text = "username";
+            // 
             // btnSavePasswd
             // 
-            btnSavePasswd.Location = new Point(40, 175);
+            btnSavePasswd.Location = new Point(30, 156);
             btnSavePasswd.Name = "btnSavePasswd";
             btnSavePasswd.Size = new Size(59, 23);
             btnSavePasswd.TabIndex = 2;
@@ -217,14 +237,6 @@
             imageList1.ImageSize = new Size(16, 16);
             imageList1.TransparentColor = Color.Transparent;
             // 
-            // tbUname
-            // 
-            tbUname.Location = new Point(160, 156);
-            tbUname.Name = "tbUname";
-            tbUname.Size = new Size(128, 23);
-            tbUname.TabIndex = 3;
-            tbUname.Text = "username";
-            // 
             // PasswordInfo
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -255,7 +267,6 @@
 
         private Label label1;
         private GroupBox groupBox1;
-        private Button btnSavePasswd;
         private TextBox tbPasswd;
         private GroupBox groupBox2;
         private Label label2;
@@ -270,5 +281,7 @@
         private TextBox textBox3;
         private TextBox tbUname;
         private ImageList imageList1;
+        private Button btnClearPassWD;
+        private Button btnSavePasswd;
     }
 }

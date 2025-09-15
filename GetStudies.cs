@@ -54,6 +54,7 @@ namespace CreditStatistics
             psi = rProjectStats.ProjectStudyDB.psi;
             ProjectStats = rProjectStats;
             readSitePage = new ReadSitePage();
+            readSitePage.Init(ref sigRun);
             cts = readSitePage.cts;
             ts = new cSequencer();
             this.KeyPreview = true;  // Ensure the form receives key events first
@@ -94,7 +95,6 @@ namespace CreditStatistics
         {
             ts.sUrl = sUrl;
             sigRun.PCname = "unknown";
-            sigRun.PCname = "unknown";
             sigRun.shortname = shortName;
 
             ts.ShortName = shortName;
@@ -104,7 +104,7 @@ namespace CreditStatistics
             bInSequencer = false;
             timerDoSelected.Enabled = true;
             //tbHdrInfo.Text += "PC:" + sigRun.PCname + " Project:" + sigRun.shortname + " Study:" + readRequest.sStudyV + NL;
-            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl, ref sigRun);
+            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl);
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -189,8 +189,8 @@ namespace CreditStatistics
                     if (jCnt > 0)
                     {
                         sVal = input.Substring(iCnt + 12, jCnt - (iCnt + 12)).Trim();
-                        PCIforSN.AddStudy("0", "unknown", Convert.ToInt32(sVal));
-                        sOut = "0:unknown:" + sVal + Environment.NewLine;
+                        PCIforSN.AddStudy("0", "All", Convert.ToInt32(sVal));
+                        sOut = "0:All:" + sVal + Environment.NewLine;
                     }
                 }
             }
@@ -320,8 +320,7 @@ namespace CreditStatistics
             if (sigRun.bDone)
             {
                 string sRawPage = readSitePage.sRawPage;
-                string sMsgOut = readSitePage.sMsgOut;
-                readSitePage.SignalTaskDone();
+                string sMsgOut = readSitePage.sMsgOut;                
                 if (sMsgOut.Length == 0)
                 {
                     timerDoSelected.Enabled = false; ;

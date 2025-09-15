@@ -113,7 +113,7 @@
             // 
             // rtbLocalHostsBT
             // 
-            rtbLocalHostsBT.Location = new Point(681, 33);
+            rtbLocalHostsBT.Location = new Point(678, 24);
             rtbLocalHostsBT.Name = "rtbLocalHostsBT";
             rtbLocalHostsBT.Size = new Size(400, 528);
             rtbLocalHostsBT.TabIndex = 0;
@@ -164,7 +164,7 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "Tools here only find app config versions";
             // 
-            // EditAppConfigs
+            // ViewAppVersions
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -173,7 +173,7 @@
             Controls.Add(groupBox1);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MinimizeBox = false;
-            Name = "EditAppConfigs";
+            Name = "ViewAppVersions";
             Text = "EditAppConfigs";
             ((System.ComponentModel.ISupportInitialize)dgvPJs).EndInit();
             groupBox1.ResumeLayout(false);

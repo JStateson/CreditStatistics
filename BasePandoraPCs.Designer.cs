@@ -37,6 +37,7 @@
             btnClearPC = new Button();
             pbUSE = new ProgressBar();
             label1 = new Label();
+            btnCancel = new Button();
             gbPCs.SuspendLayout();
             SuspendLayout();
             // 
@@ -131,17 +132,31 @@
             label1.AutoSize = true;
             label1.BackColor = SystemColors.Info;
             label1.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(22, 60);
+            label1.Location = new Point(12, 60);
             label1.Name = "label1";
-            label1.Size = new Size(188, 39);
+            label1.Size = new Size(136, 39);
             label1.TabIndex = 4;
-            label1.Text = "Color Codes:  Black or Blue online\r\nRed for SSH working but not Boinc\r\nNot online at all if disabled.";
+            label1.Text = "Color Codes:  Black or\r\nBlue online.  Red for SSH\r\nworking but not Boinc";
+            // 
+            // btnCancel
+            // 
+            btnCancel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnCancel.ForeColor = Color.Red;
+            btnCancel.Location = new Point(183, 60);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(74, 39);
+            btnCancel.TabIndex = 5;
+            btnCancel.Text = "Cancel\r\noperation\r\n";
+            btnCancel.UseVisualStyleBackColor = true;
+            btnCancel.Visible = false;
+            btnCancel.Click += btnCancel_Click;
             // 
             // BasePandoraPCs
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1385, 600);
+            Controls.Add(btnCancel);
             Controls.Add(label1);
             Controls.Add(pbUSE);
             Controls.Add(gbPCs);
@@ -165,5 +180,6 @@
         private Label label1;
         private Label lbLastScanned;
         private Label label2;
+        private Button btnCancel;
     }
 }

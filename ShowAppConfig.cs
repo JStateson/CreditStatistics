@@ -201,9 +201,13 @@ namespace CreditStatistics
             string ShortName = PJchecked();
             Debug.Assert(PCname != "" && ShortName != "", "missing project or pc name");
             SetSelected(PCname);
+            this.Enabled = false;
             await pandoraRPC.FetchSelected_app_config(ShortName);
-            tbInfo.Text = string.Join(Environment.NewLine, SelectedPC.app_config);
-            pc.CalcLimit(ref SelectedPC, 3.0);
+            this.Enabled = true;
+            if (SelectedPC.app_config != null)
+                tbInfo.Text = string.Join(Environment.NewLine, SelectedPC.app_config);
+            else tbInfo.Text = "";
+                pc.CalcLimit(ref SelectedPC, 3.0);
             foreach (cCalcLimitProj clp in SelectedPC.ProjList)
             {
                 int iTag = EnablePJ(clp.ShortName, clp.UsedInSprint);
@@ -333,7 +337,7 @@ namespace CreditStatistics
             {
                 SelectedPC.app_config = tbInfo.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);                
                 tbResInfo.Text = pc.WriteDBrecord(ref SelectedPC);
-                tbResInfo.Text += globals.WriteACrecord(globals.GetAppConfigFilename( PCname, ShortName), ref SelectedPC.app_config);                
+                tbResInfo.Text += globals.WriteACrecord(globals.FormAppConfigFilename( PCname, ShortName), ref SelectedPC.app_config);                
             }
         }
 

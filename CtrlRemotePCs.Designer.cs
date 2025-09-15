@@ -30,7 +30,6 @@
         {
             components = new System.ComponentModel.Container();
             groupBox1 = new GroupBox();
-            lbSelectedPCs = new Label();
             btnRemovePC = new Button();
             btnBoincRestart = new Button();
             btnPCreset = new Button();
@@ -51,7 +50,6 @@
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(lbSelectedPCs);
             groupBox1.Controls.Add(btnRemovePC);
             groupBox1.Controls.Add(btnBoincRestart);
             groupBox1.Controls.Add(btnPCreset);
@@ -62,17 +60,6 @@
             groupBox1.TabIndex = 20;
             groupBox1.TabStop = false;
             groupBox1.Text = "Remote System Operations";
-            // 
-            // lbSelectedPCs
-            // 
-            lbSelectedPCs.AutoSize = true;
-            lbSelectedPCs.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lbSelectedPCs.ForeColor = SystemColors.HotTrack;
-            lbSelectedPCs.Location = new Point(45, 35);
-            lbSelectedPCs.Name = "lbSelectedPCs";
-            lbSelectedPCs.Size = new Size(143, 21);
-            lbSelectedPCs.TabIndex = 45;
-            lbSelectedPCs.Text = "Systems selected:";
             // 
             // btnRemovePC
             // 
@@ -248,12 +235,12 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             Name = "CtrlRemotePCs";
             Text = "CtrlRemotePCs";
+            Controls.SetChildIndex(pbUSE, 0);
             Controls.SetChildIndex(groupBox1, 0);
             Controls.SetChildIndex(gbSamURL, 0);
             Controls.SetChildIndex(lbCurPC, 0);
             Controls.SetChildIndex(pbProj, 0);
             groupBox1.ResumeLayout(false);
-            groupBox1.PerformLayout();
             gbSamURL.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -266,7 +253,6 @@
         private Button btnPCreset;
         private Button btnPCoff;
         private Button btnRemovePC;
-        private Label lbSelectedPCs;
         private GroupBox gbSamURL;
         private Button btnNNW;
         private Button btnResume;

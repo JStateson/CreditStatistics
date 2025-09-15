@@ -29,9 +29,8 @@ namespace CreditStatistics
         cProjectStruct ProjectStats;
         private cNoHeaderProj NoHeaderProj = new cNoHeaderProj();
         private bool bInSequencer = false;
-        private RunList sigRun = new RunList();
+        public RunList sigRun = new RunList();
         private string NL = Environment.NewLine;
-
         private List<cCreditInfo> LCreditInfo = new List<cCreditInfo>();
         private List<cCreditInfo> UnsortedLCI = new List<cCreditInfo>();
         private List<DateTime> UnsortedDT = new List<DateTime>();
@@ -40,6 +39,8 @@ namespace CreditStatistics
         public List<double> mELA = new List<double>();
 
         private int[] HDRresults;
+
+        public string SingleRunSheet { get; set; }
 
         public class cOutFilter
         {
@@ -67,6 +68,7 @@ namespace CreditStatistics
         {
             InitializeComponent();
             readSitePage = new ReadSitePage();
+            readSitePage.Init(ref sigRun);
             cts = readSitePage.cts;
             readRequest = rr;
             ProjectStats = rProjectStats;
@@ -94,6 +96,14 @@ namespace CreditStatistics
                 this.Close();  // Close the form
             }
         }
+
+        private void StartTimeoutTimer()
+        {
+            pbSeq.Maximum = sigRun.TimeoutSecs; // only uses time when not in sequence mode
+            TimerNoSeq.Enabled = true;
+            btnCancel.Enabled = true;
+        }
+
         private void SelectTask()
         {
             ClearInfoDisplay();
@@ -102,6 +112,7 @@ namespace CreditStatistics
                 tcShowData.SelectTab("tabresults");
                 ClearResultInfo();
                 HDRresults = new int[] { 0, 0, 0, 0 };
+                rbUseStudy.Checked = readRequest.UseStudy;
                 RunUrl();
             }
             else
@@ -111,15 +122,20 @@ namespace CreditStatistics
 
         }
 
-        private void InitialLoad(object sender, EventArgs e)
+        public void FormSprint()
         {
-            SelectTask();
             FormSystemsCB();
             FormProjectsCB();
             pbSeq.Value = 0;
             tbUTCs.Text = ProjectStats.UTC_Start;
             tbUTCe.Text = ProjectStats.UTC_End;
             ShowSprintDays();
+            SelectTask();
+        }
+
+        private void InitialLoad(object sender, EventArgs e)
+        {
+            FormSprint();
         }
 
         private void ClearResultInfo()
@@ -129,6 +145,7 @@ namespace CreditStatistics
             LCreditInfo.Clear();
             mELA.Clear();
             mCPU.Clear();
+            SingleRunSheet = "";
         }
 
         private void SelectSprintSystems()
@@ -165,10 +182,10 @@ namespace CreditStatistics
             sOut += "Also, please examine the previous statistics and see if there is enough" + NL;
             sOut += "data to run the Sprint. Ensure 10 or more data results for each project." + NL;
             sOut += "If more data needed then you must acquire the data first" + NL;
-            SetTextHidden(tbInfo, sOut);            
+            SetTextHidden(tbInfo, sOut);
         }
 
-        private void RequestFromSelector()
+        public void RequestFromSelector() //added the async and the await
         {
             if (readRequest.UsePandoraDatabase)
             {
@@ -177,6 +194,7 @@ namespace CreditStatistics
             }
             else
             {
+                rbUseStudy.Checked = readRequest.UseStudy;
                 tcShowData.SelectTab("tabresults");
                 ClearResultInfo();
                 HDRresults = new int[] { 0, 0, 0, 0 };
@@ -190,9 +208,29 @@ namespace CreditStatistics
                 bInSequencer = false;
                 timerDoSelected.Enabled = true;
                 tbHdrInfo.Text += "PC:" + sigRun.PCname + " Project:" + sigRun.shortname + " Study:" + readRequest.sStudyV + NL;
-                readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl, ref sigRun);
-                tbHdrInfo.Text = "20 SEC: " + ts.ShortName + NL;
+                tbHdrInfo.Text += "20 SEC: " + ts.ShortName + NL;
+                StartTimeoutTimer();
+                readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl);
+
             }
+        }
+
+        public async Task RunOne()
+        {
+            ClearInfoDisplay();
+            ClearResultInfo();
+            HDRresults = new int[] { 0, 0, 0, 0 };
+            sigRun.PCname = readRequest.PCname;
+            sigRun.shortname = readRequest.shortname;
+            ts.ShortName = readRequest.shortname;
+            ts.sUrl = readRequest.UrlWanted;
+            sigRun.NextOperation = "exit";
+            sigRun.bDone = false;
+            sigRun.bBusy = true;
+            bInSequencer = false;
+            timerDoSelected.Enabled = true;
+            StartTimeoutTimer();
+            await readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl);
         }
 
         private void RunUrl()
@@ -206,12 +244,12 @@ namespace CreditStatistics
             bInSequencer = false;
             timerDoSelected.Enabled = true;
             tbHdrInfo.Text += "PC:" + sigRun.PCname + " Project:" + sigRun.shortname + " Study:" + readRequest.sStudyV + NL;
-            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl, ref sigRun);
+            StartTimeoutTimer();
+            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl);
         }
 
         private void btnRead_Click(object sender, EventArgs e)
         {
-            ClearInfoDisplay();
             SelectTask();
         }
 
@@ -219,8 +257,20 @@ namespace CreditStatistics
         {
             timerDoSelected.Enabled = false;
             pbSeq.Value = 0;
+            if (!bInSequencer)
+                SingleRunSheet = tbInfo.Text;
+            else
+                tcShowData.SelectTab("tabEachResult");
+            pbSeq.Value = 0;
             bInSequencer = false;
             gbAnal.Enabled = true;
+        }
+
+        private void FinishedSelectedTask()
+        {
+            if (bInSequencer) return;
+            TimerNoSeq.Enabled = false;
+            pbSeq.Value = 0;
         }
 
         private void timerDoSelected_Tick(object sender, EventArgs e)
@@ -229,7 +279,7 @@ namespace CreditStatistics
             {
                 string sRawPage = readSitePage.sRawPage;
                 string sMsgOut = readSitePage.sMsgOut;
-                readSitePage.SignalTaskDone();
+                FinishedSelectedTask();
                 if (sMsgOut.Length == 0)
                 {
                     timerDoSelected.Enabled = false;
@@ -257,18 +307,18 @@ namespace CreditStatistics
                 switch (runList.shortname)
                 {
                     case "yoyo":
-                        
-                            RecordsPerPage = NoHeaderProj.ProcessRawBodyYOYO(ref sRawPage);  
-                            if(RecordsPerPage > 0)
-                            {
-                                GetTableFromNoHeader(ref NoHeaderProj);
-                                //CreditInfo = ProjectStats.LCreditInfo;
-                                GetResults(ref runList);
-                                tbHdrInfo.Text = NoHeaderProj.GetHDR();
-                            }
 
-                            //AllowGS(!ProjectStats.TaskError); 
-                        
+                        RecordsPerPage = NoHeaderProj.ProcessRawBodyYOYO(ref sRawPage);
+                        if (RecordsPerPage > 0)
+                        {
+                            GetTableFromNoHeader(ref NoHeaderProj);
+                            //CreditInfo = ProjectStats.LCreditInfo;
+                            GetResults(ref runList);
+                            tbHdrInfo.Text = NoHeaderProj.GetHDR();
+                        }
+
+                        //AllowGS(!ProjectStats.TaskError); 
+
                         break;
                     case "wcg":
                         break;
@@ -539,6 +589,7 @@ namespace CreditStatistics
             }
         }
 
+
         private double GetValueD(ref RunList runList, int iLoc, int iOffset)
         {
             string sTemp = runList.RawLines[iLoc + iOffset];
@@ -558,8 +609,7 @@ namespace CreditStatistics
                 return -1;
             }
             string s = lSide.Substring(0, iRight);
-            double aValue = Convert.ToDouble(s);
-            return aValue;
+            return double.TryParse(s, out double aValue) ? aValue : -1;
         }
 
         private int BuildPrimeTable(ref string RawTable, ref RunList runList)
@@ -571,7 +621,7 @@ namespace CreditStatistics
             {
                 cCreditInfo ci = new cCreditInfo();
                 string[] RawLines = sLine.Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-                if(RawLines.Length < 9)
+                if (RawLines.Length < 9)
                 {
                     break;
                 }
@@ -711,28 +761,40 @@ namespace CreditStatistics
                 if (runList.RawLines[i].Contains("\"right\">"))
                 {
                     int iFirst = i;
+                    int n = runList.RawLines.Length;
                     while (true)
                     {
-                        cCreditInfo ci = new cCreditInfo();
-                        ci.tCompleted = GetValueT(ref runList, iFirst, -2);
-                        if (ci.tCompleted == DateTime.MinValue)
+                        if ((iFirst + 2) >= n) break;
+                        double dElapsedSecs = GetValueD(ref runList, iFirst, 0);
+                        double dCPUtimeSecs = GetValueD(ref runList, iFirst, 1);
+                        double dCredits = GetValueD(ref runList, iFirst, 2);
+                        if (dElapsedSecs >= 0 && dCPUtimeSecs >= 0 && dCredits >= 0)
                         {
-                            break; ;
+                            cCreditInfo ci = new cCreditInfo();
+                            ci.tCompleted = GetValueT(ref runList, iFirst, -2);
+                            if (ci.tCompleted == DateTime.MinValue)
+                            {
+                                break;
+                            }
+                            UnsortedDT.Add(ci.tCompleted);
+                            ci.ElapsedSecs = dElapsedSecs;
+                            ci.CPUtimeSecs = dCPUtimeSecs;
+                            ci.Credits = dCredits;
+                            ci.mELA = ci.Credits / ci.ElapsedSecs;
+                            mELA.Add(ci.mELA);
+                            if (ci.CPUtimeSecs == 0.0) ci.CPUtimeSecs = 0.01;
+                            ci.mCPU = ci.Credits / ci.CPUtimeSecs;
+                            mCPU.Add(ci.mCPU);
+                            ci.bValid = true;   // do not really know if it is valid yet
+                                                //LCreditInfo.Add(ci);
+                            UnsortedLCI.Add(ci);
+                            nWUs++;
                         }
-                        UnsortedDT.Add(ci.tCompleted);
-                        ci.ElapsedSecs = GetValueD(ref runList, iFirst, 0);
-                        ci.CPUtimeSecs = GetValueD(ref runList, iFirst, 1);
-                        ci.Credits = GetValueD(ref runList, iFirst, 2);
-                        ci.mELA = ci.Credits / ci.ElapsedSecs;
-                        mELA.Add(ci.mELA);
-                        if (ci.CPUtimeSecs == 0.0) ci.CPUtimeSecs = 0.01;
-                        ci.mCPU = ci.Credits / ci.CPUtimeSecs;
-                        mCPU.Add(ci.mCPU);
-                        ci.bValid = true;   // do not really know if it is valid yet
-                                            //LCreditInfo.Add(ci);
-                        UnsortedLCI.Add(ci);
+                        else
+                        {
+
+                        }
                         iFirst += 10;
-                        nWUs++;
                     }
                     RunDTsort();
                     return nWUs;
@@ -749,7 +811,56 @@ namespace CreditStatistics
             LCreditInfo = indicesCreditInfo.Select(i => UnsortedLCI[i]).ToList();
         }
 
-        public static (List<double>, List<int>) RemoveOutliersWithIndexes(ref List<double> data, out double std, double threshold = 2)
+        public static (List<double>, List<int>) RemoveOutliersWithIndexes(ref List<double> data, out double std)
+        {
+            int n = data.Count;
+            std = 0.0;
+            if (n < 10)
+            {
+                return RemoveOutliersWithIndexesMAD(ref data, out std, 3);
+            }
+            else
+            {
+                return RemoveOutliersWithIndexesLarge(ref data, out std, 2);
+            }
+        }
+
+
+        public static (List<double> Filtered, List<int> Indexes)
+    RemoveOutliersWithIndexesMAD(ref List<double> data, out double madSigma, double threshold = 3)
+        {
+
+            // Step 1: Median of the data
+            var sorted = data.OrderBy(x => x).ToList();
+            double median = sorted[data.Count / 2];
+
+            // Step 2: Median of absolute deviations
+            var deviations = data.Select(x => Math.Abs(x - median)).OrderBy(x => x).ToList();
+            double mad = deviations[data.Count / 2];
+
+            // Step 3: Convert MAD to sigma equivalent
+            madSigma = mad * 1.4826;
+
+            // Step 4: Filter values
+            List<int> keepIndexes = new();
+            var filtered = data
+                .Select((v, i) => new { v, i })
+                .Where(item =>
+                {
+                    // If MAD = 0, we can't scale, so accept everything
+                    bool isOutlier = mad == 0 ? false : (Math.Abs(item.v - median) / mad > threshold);
+                    if (!isOutlier) keepIndexes.Add(item.i);
+                    return !isOutlier;
+                })
+                .Select(item => item.v)
+                .ToList();
+
+            return (filtered, keepIndexes);
+        }
+
+
+        // the below should be used for 30 or more samples
+        public static (List<double>, List<int>) RemoveOutliersWithIndexesLarge(ref List<double> data, out double std, double threshold = 2)
         {
             double mean = data.Average();
             double stdDev = Math.Sqrt(data.Average(v => Math.Pow(v - mean, 2)));
@@ -790,7 +901,7 @@ namespace CreditStatistics
             {
                 cNAS.data = null;
                 cNAS.outlierIndexes = null;
-                (cNAS.data, cNAS.outlierIndexes) = RemoveOutliersWithIndexes(ref mELA, out stdDev, 2.0);
+                (cNAS.data, cNAS.outlierIndexes) = RemoveOutliersWithIndexes(ref mELA, out stdDev);
                 for (int k = 0; k < mELA.Count; k++)
                 {
                     LCreditInfo[k].bValid = false;
@@ -808,6 +919,7 @@ namespace CreditStatistics
 
         private void GetResults(ref RunList runList)
         {
+            string NL = Environment.NewLine;
             runList.RawLines = null;
             runList.sOutInfo = "";
             runList.BGinfo = "";
@@ -868,16 +980,17 @@ namespace CreditStatistics
                 SumC.CPUtimeSecs /= n;
             }
             sOut += Environment.NewLine;
+
             string s1 = Lp(SumC.nCnt.ToString(), 3)
                 + Rp("   Hours:" + dH.ToString("F2").PadLeft(7), 23)
-                + Lp(SumC.Credits.ToString("F2"), 10)
+                + Lp((SumC.Credits / SumC.nCnt).ToString("F2"), 10)
                 + Lp(SumC.ElapsedSecs.ToString("F2"), 12)
                 + Lp(SumC.mELA.ToString("F4"), 12)
                 + Lp(SumC.CPUtimeSecs.ToString("F2"), 12)
                 + Lp(SumC.mCPU.ToString("F4"), 12)
                 + "\r\n";
 
-            sTotals = s1 + Lp(runList.PCname, 25) + Lp("Total", 10) // put hostname here
+            sTotals = s1 + Lp(runList.PCname, 25) + Lp("Avg", 10) // put hostname here
                 + Lp("Avg", 12)
                 + Lp("Avg", 12)
                 + Lp("Avg", 12)
@@ -892,19 +1005,19 @@ namespace CreditStatistics
                 ts.selProjList.newStd = SumC.std;
                 if (SumC.ElapsedSecs == 0)
                 {
-                    runList.BGinfo += "ZERO NEW WORK for " + ts.sHostName + " " + ts.sStudy + " study:" + ts.sStudy + Environment.NewLine;
+                    runList.BGinfo += "ZERO NEW WORK for " + ts.sHostName + " " + ts.sStudy + " study:" + ts.sStudy + NL;
                 }
                 else
                 {
                     string sF = (SumC.stdCI * SumC.ElapsedSecs).ToString("F0");
-                    runList.BGinfo += runList.PCname + ":" + ts.ShortName + " " + (SumC.stdCI * SumC.ElapsedSecs).ToString("F0") + " CI:" + SumC.stdCI.ToString("F4") + Environment.NewLine;
+                    runList.BGinfo += runList.PCname + ":" + ts.ShortName + " " + (SumC.stdCI * SumC.ElapsedSecs).ToString("F0") + " CI:" + SumC.stdCI.ToString("F4") + NL;
                     string sG = "0";
                     if (SumC.nCnt > 0)
                         sG = Convert.ToString(ts.selProjList.Points);
-                    runList.BGinfo += "zz Count: " + SumC.nCnt.ToString().PadLeft(4) + SumC.PCname.PadLeft(16) + ts.ShortName.PadLeft(16) + sF.PadLeft(8) + sG.PadLeft(8) + Environment.NewLine;
+                    runList.BGinfo += "zz Count: " + SumC.nCnt.ToString().PadLeft(4) + SumC.PCname.PadLeft(16) + ts.ShortName.PadLeft(16) + sF.PadLeft(8) + sG.PadLeft(8) + NL;
                 }
-
-                runList.sOutInfo += sOutHdrs + Environment.NewLine + sOut + sTotals;
+                sTotals += NL + "Study: " + ts.sStudyV + " name: " + ts.StudyName + NL;
+                runList.sOutInfo += sOutHdrs + NL + sOut + sTotals;
 
                 /*
 
@@ -924,7 +1037,8 @@ namespace CreditStatistics
             }
             else
             {
-                tbInfo.Text += sOutHdrs + Environment.NewLine + sOut + sTotals + Environment.NewLine;
+                tbInfo.Text += sOutHdrs + Environment.NewLine + sOut + sTotals + Environment.NewLine + NL +
+                "Study: " + readRequest.sStudyV + " name: " + readRequest.StudyName + NL;
             }
         }
 
@@ -936,19 +1050,8 @@ namespace CreditStatistics
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            if (cts == null) return;
-            readSitePage.Cancel();
-            try
-            {
-                var token = cts.Token;  // This will throw if disposed
-                if (cts.Token.CanBeCanceled)
-                    cts.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-
-            }
             ts.StopSequencing = true;
+            readSitePage.Cancel();
         }
 
         private void SetPBseq()
@@ -965,17 +1068,26 @@ namespace CreditStatistics
             }
         }
 
-        private void SelectPCsfromCheckboxes()
+        private int SelectPCsfromCheckboxes()
         {
+            int nPJ = 0;
+            int nPC = 0;
+            foreach (cPSlist psl in ProjectStats.ProjectList)
+            {
+                psl.IsSelected = IsPJchecked(psl.shortname);
+                psl.UsedInSprint = psl.IsSelected;
+                if (psl.UsedInSprint) nPJ++;
+            }
+
             foreach (cPClimit pcl in ts.PClimit)
             {
                 pcl.IsSelected = IsPCchecked(pcl.PCname);
+                if (pcl.IsSelected) nPC++;
                 foreach (cCalcLimitProj clp in pcl.ProjList)
                     clp.IsSelected = IsPJchecked(clp.ShortName);  //8/25/2025 was used in sprint
             }
-            foreach (cPSlist psl in ProjectStats.ProjectList)
-                psl.IsSelected = IsPJchecked(psl.shortname);
 
+            return nPJ * nPC;
         }
 
         private void btnRunSprint_Click(object sender, EventArgs e)
@@ -985,7 +1097,14 @@ namespace CreditStatistics
                 ClearInfoDisplay();
                 ClearRB();
                 pbSeq.Value = 0;
-                SelectPCsfromCheckboxes();
+                int n = SelectPCsfromCheckboxes();
+                if (n == 0)
+                {
+                    tbHdrInfo.Text = "You must select one or more project and PCs" + NL;
+                    return;
+                }
+                tcShowData.SelectTab("tabResults");
+                pbSeq.Maximum = n + 1;
                 ts.SeqInxPC = ts.pc.GetFirstSelected();
                 ts.SeqInxPJ = ts.pc.GetFirstInSprint();
                 ts.NumSeqPC = ts.pc.GetNumSelected();
@@ -1024,7 +1143,7 @@ namespace CreditStatistics
                 }
             }
 
-            if(ts.StopSequencing)
+            if (ts.StopSequencing)
             {
                 StopSequencing();
                 return;
@@ -1055,12 +1174,20 @@ namespace CreditStatistics
             //globals.OpenUrl(ts.sUrl);
 
             ts.sStudy = ts.selPClimit.ProjList[iLoc].sStudy;  // possibly ts.sStudy is not the same one
+            ts.StudyName = ts.selPClimit.ProjList[iLoc].fullStudyName;
             if (ts.sStudy == "")
             {
                 ts.sStudy = "0";   // because I could not store "" in projectlist's sStudyV
                 ts.selPClimit.ProjList[iLoc].sStudy = "0";  //todo to do 8/23/2025 should have been 0 to start with!!!
             }
-            Debug.Assert(ts.sStudy == ts.selPlist.sStudyV, "sStudy in PClimit and selPlist do not match");
+            if (rbAnyStudy.Checked)
+            {
+                ts.sStudy = "0";
+                ts.selPlist.sStudyV = "0";
+                ts.StudyName = "All";
+            }
+            else
+                Debug.Assert(ts.sStudy == ts.selPlist.sStudyV, "sStudy in PClimit and selPlist do not match");
 
             ts.OnStartup = false;
 
@@ -1076,7 +1203,7 @@ namespace CreditStatistics
             Application.DoEvents();
 
             timerDoSelected.Enabled = true;
-            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl, ref sigRun);
+            readSitePage.ReadProjectThisSite(ts.ShortName, ts.sUrl);
         }
 
         private string FormGC(ref cPClimit cpl, string shortname)
@@ -1126,7 +1253,7 @@ namespace CreditStatistics
             List<string> ProblemInfo = new List<string>();
             foreach (cPClimit pcl in ts.pc.PandoraDatabase)
             {
-                cPClimit pcx = pcl;                
+                cPClimit pcx = pcl;
                 if (pcl.IsSelected)
                 {
                     PCptr.Add(iPtr++);
@@ -1241,6 +1368,7 @@ namespace CreditStatistics
                 cb.Location = new System.Drawing.Point(oCol + iCol * 120, oRow + iRow * 20);
                 cb.Checked = clp.IsSelected;
                 cb.ForeColor = clp.UsedInSprint ? System.Drawing.Color.Blue : System.Drawing.Color.Black;
+                toolTip1.SetToolTip(cb, "study:" + clp.sStudy);
                 gbPJs.Controls.Add(cb);
                 iRow++;
                 if (iRow > 20)
@@ -1491,7 +1619,7 @@ namespace CreditStatistics
         private void btnLCalcGPU_Click(object sender, EventArgs e)
         {
             ts.pc.IncludeSuccessfullJobs = cbUseSecc.Checked;
-            string sOut = ts.pc.CalcLimits(RemainingLimitDays());            
+            string sOut = ts.pc.CalcLimits(RemainingLimitDays());
             SetTextHidden(tbInfo, sOut);
         }
 
@@ -1533,9 +1661,9 @@ namespace CreditStatistics
             double LimitDays = 0;
 
             LimitDays = DaysToStart;
-            if(DaysToStart > SprintDays)
+            if (DaysToStart > SprintDays)
                 LimitDays = SprintDays;
-            if(DaysToStart < 0)
+            if (DaysToStart < 0)
                 LimitDays = 0;
             if (DaysToStart > 14)
                 lbRemDays.Text = "over 2 weeks";
@@ -1556,6 +1684,40 @@ namespace CreditStatistics
             if (DaysToStart < 0)
                 LimitDays = 0;
             return LimitDays;
+        }
+
+        private void TimerNoSeq_Tick(object sender, EventArgs e)
+        {
+            if (pbSeq.Value < pbSeq.Maximum)
+            {
+                pbSeq.Value++;
+                Application.DoEvents();
+            }
+            else
+            {
+                pbSeq.Enabled = false;
+                pbSeq.Value = 0;
+            }
+        }
+
+        private void rbStudyOption_CheckedChanged(object sender, EventArgs e)
+        {
+            RadioButton rb = (RadioButton)sender;
+            if (rb.Tag == "none")
+            {
+                cbfilterSTD.Enabled = false;
+                cbfilterSTD.Checked = false;
+            }
+            else
+            {
+                cbfilterSTD.Enabled = true;
+                cbfilterSTD.Checked = true;
+            }
+        }
+
+        private void cbfilterSTD_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

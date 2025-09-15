@@ -47,6 +47,7 @@
             tbEdit.ScrollBars = ScrollBars.Both;
             tbEdit.Size = new Size(434, 541);
             tbEdit.TabIndex = 0;
+            tbEdit.Text = "rat";
             tbEdit.WordWrap = false;
             // 
             // btnSave

@@ -107,7 +107,7 @@ namespace CreditStatistics
             AppendColoredText(rtbLocalHostsBT, "This color shows up for non-existant app configs\r\n", Color.Red);
             foreach (string ShortName in ManagedPCs.MatchingShortnames)
             {
-                string ACpathname = GetAppConfigFilename(PCname, ShortName);
+                string ACpathname = FormAppConfigFilename(PCname, ShortName);
                 await pandoraRPC.FetchOne_app_config(PCname, ShortName);
                 if (PCl.ErrorStatus < ERR_critical)
                 {
@@ -135,7 +135,7 @@ namespace CreditStatistics
 
         private int LoadRestoreFrom(string PCname)
         {
-            string filePath = globals.WhereDOC;
+            string filePath = globals.WhereBoincData;
             string searchPattern = "app_config_" + PCname + "_" + "*.xml";
             string[] files = Directory.GetFiles(filePath, searchPattern);
             RestoreAC.Clear();
@@ -269,7 +269,7 @@ AsusX299
             foreach (string ProjName in ManagedPCs.MatchingShortnames)
             {
                 string app_name = "app_config_" + PCname + "_" + ProjName + ".xml";
-                string pathName = Path.Join(globals.WhereDOC, app_name);
+                string pathName = Path.Join(globals.WhereBoincData, app_name);
                 if (File.Exists(pathName))
                 {
                     AppendColoredText(rtbLocalHostsBT, "skipping: " + pathName + NL, Color.Black);

@@ -37,6 +37,7 @@ namespace CreditStatistics
         private bool UseRB;
         private List<string> Urls = new List<string>();
         private bool NextLoad = false;
+        private string sLastChecked = "";
 
         // Property to set the reference
         public cProjectStruct ProjectStats
@@ -82,11 +83,19 @@ namespace CreditStatistics
             if (UseRB)
             {
                 FormControlRB();
+                if (sLastChecked == "")
+                    sLastChecked = ManagedPCs.MatchingShortnames[0];
+                SetRBCB(sLastChecked);
+                
             }
             else
             {
                 FormControlCB();
+                if (sLastChecked == "")
+                    sLastChecked = ManagedPCs.MatchingShortnames[0];
+                SetRBCB(sLastChecked);
             }
+   
         }
 
         private void FormControlRB()
@@ -128,9 +137,43 @@ namespace CreditStatistics
         {
             RadioButton rb = (RadioButton)sender;
             if (!rb.Checked) return;
+            sLastChecked = rb.Text;
             NotifyForms(false, rb.Text, 1);
         }
 
+        private void SetRBCB(string s)
+        {
+            foreach(Control c in groupBox1.Controls)
+            {
+                if(c is  RadioButton rb && (rb.Text == s))
+                {
+                    rb.Checked = true;
+                    return;
+
+                }
+                if (c is CheckBox cb && (cb.Tag == s))
+                {
+                    cb.Checked = true;
+                    return;
+                }
+            }
+            foreach (Control c in groupBox1.Controls)
+            {
+                if (c is RadioButton rb)
+                {
+                    rb.Checked = true;
+                    sLastChecked = rb.Text;
+                    return;
+
+                }
+                if (c is CheckBox cb)
+                {
+                    cb.Checked = true;
+                    sLastChecked = cb.Text;
+                    return;
+                }
+            }
+        }
 
         private void FormControlCB()
         {

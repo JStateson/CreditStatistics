@@ -9,12 +9,15 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Policy;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using static CreditStatistics.globals;
 using static CreditStatistics.PandoraConfig;
+
 
 /*
  * easy way to fill a listbox or any type of widget with scattered data.
@@ -32,15 +35,18 @@ namespace CreditStatistics
         public CreditStatistics(string[] args)
         {
             InitializeComponent();
-            globals.WhereEXE = AppContext.BaseDirectory.ToString();
-
-            int i = globals.WhereEXE.IndexOf("\\Release");
-            if (i < 0)
-                i = globals.WhereEXE.IndexOf("\\Debug");
-            globals.WhereDOC = globals.WhereEXE.Substring(0, i) + "\\Release";
-            globals.WhereEXE = globals.WhereDOC;
-
-            MessageBox.Show("Documents are here: " + globals.WhereEXE);
+            globals.FormDataPaths();
+            string BoincTaskRemotes = Path.Combine(WhereBoincTaskFolder, "computers.xml");
+            findOtherPCsToolStripMenuItem.Enabled = File.Exists(BoincTaskRemotes);
+#if DEBUG
+            getAllConfigFilesToolStripMenuItem.Enabled = true;
+            btnRun.Visible = true;
+            btnPaste.Visible = true;
+#else
+            getAllConfigFilesToolStripMenuItem.Enabled = false;
+            btnRun.Visible = false;
+            btnPaste.Visible =false;
+#endif
 
             if (args.Length > 0)
             {
@@ -104,7 +110,8 @@ namespace CreditStatistics
                     cCalcLimitProj Tclp = ProjectStats.TempletDB.GetProjStruct(clp.ShortName);
                     clp.BunkerEnd = Tclp.BunkerEnd;
                     clp.BunkerStart = Tclp.BunkerStart;
-                    clp.AppType = Tclp.AppType;
+                    if (clp.AppType == "")
+                        clp.AppType = ProjectStats.GetDefaultAppType(clp.ShortName);
                 }
                 cPClimit pclx = pcl;
                 pc.WriteDBrecord(ref pclx);
@@ -186,27 +193,6 @@ namespace CreditStatistics
             }
         }
 
-        private void ApplyName()
-        {
-            string sID = tbProjID.Text.Trim();
-
-            tbProjUrl.Text = "";
-            if (sID == "") return;
-            if (ManagedPCs.CurrentProjectsID == "" || sID == "12345")
-            {
-                return;
-            }
-            if (IsInteger(sID))
-            {
-
-                string sURL = "";// ProjectStats.GetURL0(SelectedProject, sID, ref CanPageValids);
-                if (sURL == "")
-                {
-                    //Debug.Assert(false);
-                }
-                tbProjUrl.Text = sURL;
-            }
-        }
 
         private void rbProject_CheckedChanged(object sender, EventArgs e)
         {
@@ -232,9 +218,8 @@ namespace CreditStatistics
             string shortname = rb.Text.ToString();
             tbProjID.Text = ManagedPCs.ProjectIDfromPCsShortname(shortname);
             string PCname = cbPCavail.Text;
-            SetLastStudy(shortname, PCname);
             cbStudyAvail.SelectedIndexChanged += cbStudyAvail_SelectedIndexChanged;
-
+            SetLastStudy(shortname, PCname);
             tbStudyID.Text = ProjectStudyDB.CurrentStudy;
             ProjectChanged();
         }
@@ -272,6 +257,7 @@ namespace CreditStatistics
             FormUrlFromChange();
         }
 
+
         private void btnGetData_Click(object sender, EventArgs e)
         {
             ReadRequest rr = new ReadRequest();
@@ -291,6 +277,90 @@ namespace CreditStatistics
             showData.Dispose();
         }
 
+        private async void xbtnGetData_Click(object sender, EventArgs e)
+        {
+            ReadRequest rr = new ReadRequest();
+            rr.UsePandoraDatabase = false;
+            rr.bUseUrl = false;
+            rr.GetHdr = true;
+            rr.GetBody = true;
+            rr.PCname = tbPCname.Text;
+            cPSlist PSl = ProjectStats.ProjectList[TagOfProject];
+            rr.shortname = ProjectStats.ShortName(TagOfProject);
+            rr.sStudyV = PSl.sStudyV;
+            rr.StudyName = ProjectStudyDB.GetNameOfStudy(PSl.sStudyV);
+            rr.sValid = PSl.sValid;
+            rr.sHostID = tbProjID.Text;
+            rr.UrlWanted = PSl.FormURL(rr.sHostID);
+            ShowData showData = new ShowData(ref ProjectStats, rr);
+
+            // Fix: RunOne should be awaited as a Task, not as void
+            await Task.Run(() => showData.RunOne());
+            string sTemp = showData.SingleRunSheet;
+            showData.Dispose();
+            //PutOnNotepad(sTemp);
+        }
+
+        private void btnRun_Click(object sender, EventArgs e)
+        {
+            string sUrl = tbProjUrl.Text;
+            FormReadRequest(sUrl);
+            newReadRequest.UseStudy = true;
+            ShowNotepadData(ref ProjectStats, ref newReadRequest);
+        }
+
+        internal class CSendNotepad
+        {
+
+            [DllImport("user32.dll", SetLastError = true)]
+            private static extern bool BringWindowToTop(IntPtr hWnd);
+
+            public void PasteToNotepad(string strText)
+            {
+                if (strText == "") return;
+                // Let's start Notepad
+                Process process = new Process();
+                process.StartInfo.FileName = "C:\\Windows\\Notepad.exe";
+                process.Start();
+                Thread.Sleep(2000);
+                Clipboard.SetText(strText);
+                IntPtr hWnd = process.Handle;
+                BringWindowToTop(hWnd);
+                SendKeys.SendWait("^V");
+            }
+            public void PasteToNotepad(string strText, string strFile)
+            {
+                if (strText == "") return;
+                // Let's start Notepad
+                Process process = new Process();
+                process.StartInfo.FileName = "C:\\Windows\\Notepad.exe";
+                process.StartInfo.Arguments = strFile;
+                process.Start();
+                Thread.Sleep(2000);
+                Clipboard.SetText(strText);
+                IntPtr hWnd = process.Handle;
+                BringWindowToTop(hWnd);
+                SendKeys.SendWait("^{end}");
+                SendKeys.SendWait("{ENTER}");
+                SendKeys.SendWait("^V");
+            }
+        }
+        private void PutOnNotepad(string strIn)
+        {
+            CSendNotepad SendNotepad = new CSendNotepad();
+            SendNotepad.PasteToNotepad(strIn);
+        }
+
+        private void ShowNotepadData(ref cProjectStruct ProjectStats, ref ReadRequest rr)
+        {
+            ShowData showData = new ShowData(ref ProjectStats, rr);
+            showData.Visible = false;
+            showData.ShowDialog();
+            string sTemp = showData.SingleRunSheet;
+            PutOnNotepad(sTemp);
+            showData.Dispose();
+        }
+
         private void findOtherPCsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             RemoteSystems rs = new RemoteSystems(ref ProjectStats);
@@ -306,14 +376,6 @@ namespace CreditStatistics
             UpdateRB();
             ProjectChanged();
         }
-
-        private void runMultiple_Click(object sender, EventArgs e)
-        {
-            MultipleRuns mRuns = new MultipleRuns(ref ProjectStats);
-            mRuns.ShowDialog();
-            mRuns.Dispose();
-        }
-
 
         ReadRequest newReadRequest = new ReadRequest();
         private void FormReadRequest(string sUrl)
@@ -349,15 +411,6 @@ namespace CreditStatistics
             FormReadRequest(sUrl);
         }
 
-        private void btnRun_Click(object sender, EventArgs e)
-        {
-            string sUrl = tbProjUrl.Text;
-            FormReadRequest(sUrl);
-            ShowData showData = new ShowData(ref ProjectStats, newReadRequest);
-            showData.ShowDialog();
-            showData.Dispose();
-        }
-
 
         private string ParseUrl(string sUrl, out string sHostID, out string sPage, out string sAppid, out string sProjName, out string sValid, out string sPCname)
         {
@@ -378,7 +431,7 @@ namespace CreditStatistics
             {
                 return "badly formed url: missing http";
             }
-            ProjectIndex = ProjectStats.GetNameIndex(sUrl);
+            ProjectIndex = ProjectStats.GetUrlIndex(sUrl);
             if (ProjectIndex < 0)
             {
                 return "Project not found in url";
@@ -559,15 +612,17 @@ namespace CreditStatistics
             rr.GetHdr = true;
             rr.GetBody = true;
             ShowData showData = new ShowData(ref ProjectStats, rr);
+            showData.FormSprint();
             showData.ShowDialog();
             showData.Dispose();
         }
 
         private void assignPCsAndProjectsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AssignPcProj ap = new AssignPcProj(ref ProjectStats);
-            ap.ShowDialog();
-            ap.Dispose();
+            ReqCmds reqcmd = new ReqCmds();
+            AssignStudies apCPUGPU = new AssignStudies(ref ProjectStats, reqcmd);
+            apCPUGPU.ShowDialog();
+            apCPUGPU.Dispose();
         }
 
         private void sendPandoraViewAppsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -634,6 +689,75 @@ namespace CreditStatistics
             EditAllAppConfigs eac = new EditAllAppConfigs(ref ProjectStats, ref reqCmd);
             eac.ShowDialog();
             eac.Dispose();
+        }
+
+        private void tsmHelp_Click(object sender, EventArgs e)
+        {
+
+            if (sender is ToolStripMenuItem menuItem)
+            {
+                string ClickedName = menuItem.Name;
+                string sFilePath = Path.Combine(WhereCredit, ClickedName + ".docx");
+                if (!File.Exists(sFilePath))
+                    CreateFileFromTemplate(sFilePath);
+                else
+                {
+
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = sFilePath,
+                        UseShellExecute = true
+                    });
+                }
+            }
+        }
+
+        private void CreateFileFromTemplate(string targetPath)
+        {
+            // Get embedded template resource
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "CreditStatistics.blank.docx"; // <Namespace>.<Filename>
+
+            using (Stream resource = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (resource == null)
+                    throw new Exception("Template resource not found.");
+
+                using (FileStream file = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
+                {
+                    resource.CopyTo(file);
+                }
+            }
+        }
+
+        private void tsmAssignCpuGpu_Click(object sender, EventArgs e)
+        {
+            ReqCmds reqCmd = new ReqCmds();
+            reqCmd.UseRadioButtons = true;
+            reqCmd.ComboxUsage = "cpugpu";
+            AssignCpuGpu mRuns = new AssignCpuGpu(ref ProjectStats, reqCmd);
+            mRuns.ShowDialog();
+            mRuns.Dispose();
+        }
+
+        private void tsmMinWUsNeeded_Click(object sender, EventArgs e)
+        {
+            ReqCmds reqCmd = new ReqCmds();
+            reqCmd.UseRadioButtons = true;
+            reqCmd.ComboxUsage = "WUsWanted";
+            SetupSampleData ssd = new SetupSampleData(ref ProjectStats, reqCmd);
+            ssd.ShowDialog();
+            ssd.Dispose();
+        }
+
+        private void tsmAssignStudy_Click(object sender, EventArgs e)
+        {
+            ReqCmds reqCmd = new ReqCmds();
+            reqCmd.UseRadioButtons = true;
+            reqCmd.ComboxUsage = "StudyWanted";
+            AssignStudies asW = new AssignStudies(ref ProjectStats, reqCmd);
+            asW.ShowDialog();
+            asW.Dispose();
         }
     }
 }

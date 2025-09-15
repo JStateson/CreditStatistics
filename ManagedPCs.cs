@@ -1,25 +1,9 @@
-﻿using CreditStatistics;
-using Microsoft.Playwright;
-using Microsoft.VisualBasic;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
+﻿using Microsoft.Win32;
 using System.Diagnostics;
-using System.Linq;
 using System.Management;
 using System.Net;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Security.Cryptography.Pkcs;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using static CreditStatistics.globals;
 using static CreditStatistics.PandoraConfig;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace CreditStatistics
@@ -79,7 +63,7 @@ namespace CreditStatistics
                 Debug.Assert(j >= 0);
                 sMaster = line.Substring(i, j - i);
                 uMaster = uline.Substring(i, j - i);
-                int iLoc = ProjectStats.GetNameIndex(sMaster);
+                int iLoc = ProjectStats.GetUrlIndex(sMaster);
                 if (iLoc < 0)
                 {
                     sRtn += "Project " + sMaster + " is unknown to this app" + Environment.NewLine;
@@ -102,21 +86,22 @@ namespace CreditStatistics
                 Debug.Assert(j >= 0);
                 sMaster = line.Substring(i, j - i);
                 uMaster = uline.Substring(i, j - i);
-                int iLoc = ProjectStats.GetNameIndex(sMaster);
+                int iLoc = ProjectStats.GetUrlIndex(sMaster);
                 if (iLoc < 0)
                 {
                     sRtn += "Project " + uMaster + " is unknown and probably discontinued" + Environment.NewLine;
                 }
                 else if (ProjectStats.ProjectList[iLoc].MasterUrl == "")
                     ProjectStats.ProjectList[iLoc].MasterUrl = uMaster;
-                MasterUrls.Add(sMaster);
+                if (!MasterUrls.Contains(sMaster))
+                    MasterUrls.Add(sMaster);
             }
 
 
 
             foreach (string sUrl in MasterUrls)
             {
-                int n = ProjectStats.GetNameIndex(sUrl);
+                int n = ProjectStats.GetUrlIndex(sUrl);
                 if (n < 0)
                 {
                     sRtn += "Ignoring project " + sUrl + Environment.NewLine;
@@ -132,7 +117,7 @@ namespace CreditStatistics
                 }
             }
 
-            TryFormMasterPandora(ref MasterUrls);
+            sRtn += TryFormMasterPandora(ref MasterUrls, ref ProjectStats);
 
             int ProcessorCount = Environment.ProcessorCount;
             int GPUcount = 0;
@@ -437,6 +422,7 @@ namespace CreditStatistics
         public string ContactPCproject(string PCname, string sCmd, string MasterUrl)
         {
             cHostInfo hi = NameToSystem(PCname);
+            if (!hi.HasBOINC) return "offline";
             string sArgs = "";
 
             if(MasterUrl != "")
@@ -490,7 +476,7 @@ namespace CreditStatistics
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
 
-                    // Timeout safety: wait up to 30s (adjust as needed)
+                    // Timeout safety: wait up to 5s (adjust as needed)
                     if (!process.WaitForExit(5000))
                     {
                         process.Kill();
@@ -519,7 +505,6 @@ namespace CreditStatistics
             return "";
         }
 
- 
         public Color GetColor(string PCname)
         {
             cHostInfo hi = NameToSystem(PCname);
@@ -533,7 +518,7 @@ namespace CreditStatistics
         }
 
 
-        // some sprint PCs no longer exist and could be removed from boincstats
+        // some sprint PCs no longer exist and could be removed from boinctasks
         public bool IsSystemManaged(string PCname)
         {
             foreach(cHostInfo ls in LocalSystems)
@@ -757,31 +742,41 @@ namespace CreditStatistics
             }
         }
 
-
-
-        private void TryFormMasterPandora(ref List<string> MasterUrls)
+        private string TryFormMasterPandora(ref List<string> MasterUrls, ref cProjectStruct ProjectStats)
         {
-            string filePath = globals.WhereMasterPandora;
+            string sErr = "";
             string NL = Environment.NewLine;
             int nMasters = Properties.Settings.Default.nMasterUrls;
             string sOut = "";
-            if(MasterUrls.Count > nMasters || !File.Exists(filePath))
+            if(MasterUrls.Count > nMasters || !File.Exists(WhereMasterPandora))
             {
-                sOut += "bunker_strategy: 1" + NL;
+                sOut += "bunker_strategy: 3" + NL;
                 sOut += "message_filters:has reached a limit,your preferences are set,No tasks sent,No work sent,see scheduler log,#" + NL;
                 sOut += "earliest_deadline_first" + NL; 
                 sOut += "debug" + NL;
-                foreach(string s in MasterUrls)
+                nMasters = MasterUrls.Count;
+                foreach (string s in MasterUrls)
                 {
+                    int ProjectIndex = ProjectStats.GetUrlIndex(s);
+                    if(ProjectIndex < 0)
+                    {
+                        sErr += "Ignoring unknown project " + s + NL;
+                        continue;
+                    }
+                    string ProjName = ProjectStats.ShortName(ProjectIndex);
+                    cPSlist psl = ProjectStats.ProjectList[ProjectIndex];
                     sOut += NL + "project: " + s + NL;
-                    sOut += "block_reports: 1000" + NL;
-                    sOut += "limit: 10" + NL;
+                    sOut += "block_reports: 1000" + NL;   
+                    string sWanted = psl.MinWUsNeeded.ToString();
+                    sOut += "limit: " + sWanted + NL;   // this is the required minimum number of work units needed for an average                    
+                    sOut += "#app_type: " + ProjectStats.GetDefaultAppType(ProjName);
                 }
                 sOut += "#" + NL;
+                File.WriteAllText(WhereMasterPandora, sOut);
+                Properties.Settings.Default.nMasterUrls = nMasters;
+                Properties.Settings.Default.Save();
             }
-            File.WriteAllText(filePath, sOut);
-            Properties.Settings.Default.nMasterUrls = nMasters;
-            Properties.Settings.Default.Save();
+            return sErr;
         }
     }
 }

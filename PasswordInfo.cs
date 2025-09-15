@@ -15,13 +15,18 @@ namespace CreditStatistics
         public PasswordInfo()
         {
             InitializeComponent();
-            tbUsername.Text = Environment.UserName;
+            tbUsername.Text = Properties.Settings.Default.BoincWebUsername;
         }
 
         private void btnSavePasswd_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.BoincWebPassword = tbPasswd.Text;
             Properties.Settings.Default.BoincWebUsername = tbUname.Text;
+        }
+
+        private void btnClearPassWD_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.BoincWebPassword = "";
         }
     }
 }
