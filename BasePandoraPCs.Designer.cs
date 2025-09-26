@@ -170,8 +170,6 @@
         }
 
         #endregion
-
-        private GroupBox gbPCs;
         private Button btnInvertPC;
         private Button btnClearPC;
         private Button btnCheckPC;
@@ -181,5 +179,6 @@
         private Label lbLastScanned;
         private Label label2;
         private Button btnCancel;
+        protected GroupBox gbPCs;
     }
 }

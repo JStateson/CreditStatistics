@@ -474,14 +474,34 @@ namespace CreditStatistics
 
         public static void WritePCrecordS(string PCname, ref string[] pc_config)
         {
-            string Pathname = Path.Join(WherePandoraData, "pandora_config_" + PCname + ".txt") ;
+            string Pathname = Path.Join(WherePandoraData, "pandora_config_" + PCname + ".txt");
             if (pc_config != null)
                 File.WriteAllLines(Pathname, pc_config);
         }
 
         public static string[] ReadPCrecordS(string PCname)
         {
-            string Pathname = Path.Join(WherePandoraData ,"pandora_config_" + PCname + ".txt");
+            string Pathname = Path.Join(WherePandoraData, "pandora_config_" + PCname + ".txt");
+            if (!File.Exists(Pathname)) return null;
+            return File.ReadAllLines(Pathname);
+        }
+
+        public static string WriteSCrecordS(string PCname, ref string[] pc_config)
+        {
+            string Pathname = GetSCfilePath(PCname);
+            if (pc_config != null)
+                File.WriteAllLines(Pathname, pc_config);
+            return Pathname;
+        }
+
+        public static string GetSCfilePath(string PCname)
+        {
+            return Path.Join(WherePandoraData, "sample_config_" + PCname + ".txt");
+        }
+
+        public static string[] ReadSCrecordS(string PCname)
+        {
+            string Pathname = Path.Join(WherePandoraData ,"sample_config_" + PCname + ".txt");
             if (!File.Exists(Pathname)) return null;
             return File.ReadAllLines(Pathname);
         }
@@ -979,7 +999,21 @@ namespace CreditStatistics
                     return StudyIDsDue[0];
                 }
 
-                public void UpdateStudy(string sStudy, string newStudyID, string sStudyName, int nDays, double nCPUs, double nGPUs)
+                public void AddFullStudy(string sStudy, string sStudyName, int nDays,
+                    double nCPUs, double nGPUs, int nItems)
+                {
+                    cStudyIDsDue sid = new cStudyIDsDue();
+                    sid.sStudyName = sStudyName;
+                    sid.nDueDuration = nDays;
+                    sid.sStudy = sStudy;
+                    sid.CPUsUsed = nCPUs;
+                    sid.GPUsUsed = nGPUs;
+                    sid.nItems = nItems;
+                    StudyIDsDue.Add(sid);
+                }
+
+                public void UpdateStudy(string sStudy, string newStudyID, string sStudyName,
+                    int nDays, double nCPUs, double nGPUs)
                 {
                     int i = -1;
                     foreach(cStudyIDsDue sid  in StudyIDsDue)
@@ -991,11 +1025,6 @@ namespace CreditStatistics
                                 sid.sStudyName = sStudyName;
                             if(nDays != 0)
                                 sid.nDueDuration = nDays;
-                            if (newStudyID == "-1")
-                            {
-                                StudyIDsDue.RemoveAt(i);
-                                return;
-                            }
                             if (nCPUs > 0)
                                 StudyIDsDue[i].CPUsUsed = nCPUs;
                             if (nGPUs > 0)  
@@ -1142,6 +1171,18 @@ namespace CreditStatistics
                         PCIforSN = ThisPSI(PSI.ShortName);
                         bool HasAll = false;
                         iStudyV.Clear();
+                        if(PSI.StudyIDsDue.Count == 0)
+                        {
+                            cStudyIDsDue Newsid = new cStudyIDsDue();
+                            Newsid.sStudy = "0";
+                            Newsid.sStudyName = "All";
+                            Newsid.nItems = 0;
+                            Newsid.CPUsUsed = 1.0;
+                            Newsid.GPUsUsed = 1.0;
+                            Newsid.nDueDuration = 0;
+                            PSI.StudyIDsDue.Add(Newsid);
+                        }
+
                         foreach (cStudyIDsDue sid in PSI.StudyIDsDue)
                         {
                             if(sid.sStudy == "" || sid.sStudy =="null")

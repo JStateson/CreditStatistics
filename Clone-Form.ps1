@@ -1,4 +1,5 @@
 ﻿# powershell -ExecutionPolicy Bypass -NoProfile -File .\Clone-Form.ps1 -SourceForm "BaseMultiples" -NewForms One Two Three etc
+# powershell -ExecutionPolicy Bypass -NoProfile -File .\Clone-Form.ps1 -SourceForm "BasePandoraPCs" -NewForms SampleRequest
 param(
     [string]$SourceForm = "SampleData",
     [string[]]$NewForms

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using static CreditStatistics.globals;
 
 namespace CreditStatistics
@@ -18,8 +19,6 @@ namespace CreditStatistics
         private string boinc_email = Properties.Settings.Default.BoincWebUsername;
 
         string ProjectName = "";
-        string Url = "";
-        //private CancellationTokenSource cts;
         private System.Threading.Timer timeoutTimer;
         private bool DoHeadless = true;
         private string NL = Environment.NewLine;
@@ -32,7 +31,7 @@ namespace CreditStatistics
         
         public async Task ReadProjectThisSite(string shortname, string sUrl)
         {
-            Url = sUrl;
+            sig.url = sUrl;
             ProjectName = shortname;
             sMsgOut = "";
             sig.bDone = false;
@@ -82,17 +81,17 @@ namespace CreditStatistics
             }
             finally
             {
-                cts.Dispose();
+                if(cts != null)
+                    cts.Dispose();
                 cts = null;
             }
         }
 
 
         private async Task DoPlaywrightWorkAsync(CancellationToken token)
-        {
-            
+        {            
             if (ProjectName == "primegrid" || ProjectName == "cpdn")
-                TaskStart(token);  //TaskStartPrime(token);
+                TaskStartPrime(token);
             else if (ProjectName == "mine")
                 await TaskStartMine(token);
             else                
@@ -101,11 +100,18 @@ namespace CreditStatistics
 
         private void TaskStartPrime(CancellationToken token)
         {
-
-            Task longRunningTask = Task.Run(async () =>
+            try
             {
-                await LoginWithPlaywrightAsync(token);
-            }, token);
+                Task longRunningTask = Task.Run(async () =>
+                {
+                    await LoginWithPlaywrightAsync(token);
+                }, token);
+            }
+            catch (Exception ex)
+            {
+                sig.sMsgErr += ex.Message + NL;
+                sig.bDone = true;
+            }
         }
 
         // Change the signature of TaskStart from 'private async void TaskStart(CancellationToken token)' to 'private async Task TaskStart(CancellationToken token)'
@@ -123,17 +129,27 @@ namespace CreditStatistics
             }
             catch (Exception ex)
             {
-
+                sig.sMsgErr += ex.Message + NL;
+                sig.bDone = true;
             }
         }
 
         private async Task TaskStartMine(CancellationToken token)
         {
-            Task longRunningTask = Task.Run(async () =>
+            try
             {
-                await ReadOnePageNoPasswordMine(token);
-            }, token);
-            await longRunningTask;
+                Task longRunningTask = Task.Run(async () =>
+                {
+                    await ReadOnePageNoPasswordMine(token);
+                }, token);
+                await longRunningTask;
+            }
+            catch (Exception ex)
+            {
+                sig.sMsgErr += ex.Message + NL;
+                sig.bDone = true;
+            }
+
         }
 
         private async Task ReadOnePageNoPasswordMine(CancellationToken token)
@@ -161,11 +177,11 @@ namespace CreditStatistics
 
             try
             {
-                await page.GotoAsync(Url, new() { Timeout = 0 });
+                await page.GotoAsync(sig.url, new() { Timeout = 0});
             }
             catch (PlaywrightException ex)
             {
-                string sErr = ex.Message;
+                sig.sMsgErr += ex.Message + NL;
             }
 
 
@@ -176,11 +192,11 @@ namespace CreditStatistics
 
             try
             {
-                await page.GotoAsync(Url, new() { Timeout = 0 });
+                await page.GotoAsync(sig.url, new() { Timeout = 0});
             }
             catch (PlaywrightException ex)
             {
-                string sErr = ex.Message;
+                sig.sMsgErr += ex.Message + NL;
             }
 
 
@@ -221,7 +237,7 @@ namespace CreditStatistics
             token.ThrowIfCancellationRequested();
             try
             {
-                await page.GotoAsync(Url, new() { Timeout = 0 });
+                await page.GotoAsync(sig.url, new() { Timeout = 0});
             }
             catch (PlaywrightException ex)
             {
@@ -252,59 +268,66 @@ namespace CreditStatistics
                 Headless =  DoHeadless // Set to false to watch the login happen
             });
 
+            var context = await browser.NewContextAsync(new()
+            {
+                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...",
+                ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
+                IgnoreHTTPSErrors = true
+            });
             //token.ThrowIfCancellationRequested();
 
-
+            /*
             var context = await browser.NewContextAsync(new BrowserNewContextOptions
             {
                 IgnoreHTTPSErrors = true
             });
+            */
 
             var page = await context.NewPageAsync();
-
+            string url = "https://main.cpdn.org/login_form.php";
 
             if (ProjectName == "cpdn")
             {
-
+                await Task.Delay(500);
                 try
                 {
-                    await page.GotoAsync("https://main.cpdn.org/login_form.php", new() { Timeout = 0 });
+                    //await page.GotoAsync(url, new() { Timeout = 0});
+                    await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
                 }
                 catch (PlaywrightException ex)
                 {
-                    string sErr = ex.Message;
+                    sig.sMsgErr += ex.Message + NL;
                 }
 
                 try
                 {
-                    
+
+                               
                     var locator = page.Locator("input[name='email_addr']");
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                    await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
                     var isVisible = await locator.IsVisibleAsync();
                     string sErr = $"Is input visible? {isVisible}";
-                    Console.WriteLine(sErr);
-                    await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });                
+                    //sig.sMsgErr += sErr + NL;
+                    await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });                
                     await locator.FillAsync(boinc_email);
-                    await page.FillAsync("input[name='passwd']", boinc_email, new() { Timeout = 5000 });
+                    await page.FillAsync("input[name='passwd']", boinc_passwd, new() { Timeout = 10000 });
                     await page.ClickAsync("button[type='submit']");
-
+                    
                 }
                 catch (TimeoutException tex)
                 {
-                    Console.WriteLine("Timeout: input[name='email_addr'] did not become visible.");
-                    Console.WriteLine(tex.Message);
+                    sig.sMsgErr += "Timeout: input[name='email_addr'] did not become visible: " + tex.Message + NL;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error filling input:");
-                    Console.WriteLine(ex.ToString());
+                    sig.sMsgErr += "Error filling input: " + ex.ToString() + NL;
                 }
-                await page.GotoAsync(Url, new() { Timeout = 0 });
+                //await page.GotoAsync(sig.url, new() { Timeout = 0});
+                await page.GotoAsync(sig.url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
                 await Task.Delay(500);
 
                 sRawPage = await page.ContentAsync();
-
-
+                sig.bDone = true;
             }
 
 
@@ -315,7 +338,7 @@ namespace CreditStatistics
             {
                 try
                 {
-                    await page.GotoAsync("https://www.primegrid.com/login_form.php?next_url=/", new() { Timeout = 0 });
+                    await page.GotoAsync("https://www.primegrid.com/login_form.php?next_url=/", new() { Timeout = 0});
                 }
                 catch (PlaywrightException ex)
                 {
@@ -334,7 +357,7 @@ namespace CreditStatistics
                 token.ThrowIfCancellationRequested();
                 await Task.Delay(500);
 
-                await page.GotoAsync(Url, new() { Timeout = 0 });
+                await page.GotoAsync(sig.url, new() { Timeout = 0});
                 token.ThrowIfCancellationRequested();
                 await Task.Delay(500);
 

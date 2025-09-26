@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Xml;
 using System.Xml.Linq;
+using static CreditStatistics.cParseConfigs;
 using static CreditStatistics.globals;
 using static CreditStatistics.globals.cAllProjectStudyInfo;
 using static CreditStatistics.PandoraConfig;
@@ -66,6 +67,7 @@ namespace CreditStatistics
             public int JobsFailed;   // number of bad work units
             public int JobsSucceeded;
             public int TotalWUcnt; // includes ones being worked on and downloading
+            public int WUsWanted;   // number of WUs wanted to form an average
             public int BlockCnt;
             public string PrevCnt, PrevAvg, PrevStudy, PrevPoints, PrevLimit, PrevStd;
             public string PrevStart, PrevEnd, PrevAppType;
@@ -523,6 +525,7 @@ namespace CreditStatistics
                 pc_config = sOut.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                 return sOut + "#";
             }
+
 
             //database templet but pandora needs additional parameters
             public string CreateTemplet()
@@ -1003,6 +1006,30 @@ namespace CreditStatistics
             if(File.Exists(filePath))
                 return File.ReadAllText(filePath);
             return "";
+        }
+
+        public string CreateSamplePandoraConfig(int PC_code,ref cPClimit pcl)
+        {
+            string NL = Environment.NewLine;
+            string sOut = "message_filters:has reached a limit,your preferences are set,No tasks sent,No work sent,see scheduler log,#" + NL;
+            sOut += "earliest_deadline_first\r\ndebug\r\nbunker_strategy: " + PC_code + NL + NL;
+            foreach (cCalcLimitProj ep in pcl.ProjList)
+            {
+                if (!ep.ProjectDisabled)
+                {
+                    sOut += "project: " + ep.ProjUrl + NL;
+                    sOut += "block_reports: 1000" + NL;
+                    int lv = ep.WUsWanted;
+                    if (lv == 0 || ((PC_code & PC_NNW_WU_10) > 0)) lv = 10;
+                    sOut += "limit: " + lv.ToString() + NL;
+                    if (ProjectStats.HaveMultipleStudies(ep.ShortName))
+                        sOut += "#please ensure that only study " + ep.sStudy +
+                            " is selected for project " + ep.ShortName + NL + NL;
+                }
+            }
+
+            pcl.pc_config = sOut.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+            return sOut;
         }
 
         public List<cPClimit> GetConfigParams()

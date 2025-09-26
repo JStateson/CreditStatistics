@@ -30,7 +30,6 @@
         {
             components = new System.ComponentModel.Container();
             btnStart = new Button();
-            tbInfo = new TextBox();
             label1 = new Label();
             lbSelProj = new ListBox();
             btnSave = new Button();
@@ -38,6 +37,7 @@
             btnEdit = new Button();
             tcStudy = new TabControl();
             tabView = new TabPage();
+            rtbInfo = new RichTextBox();
             tabEdit = new TabPage();
             label2 = new Label();
             btnApply = new Button();
@@ -51,6 +51,7 @@
             OrigID = new DataGridViewTextBoxColumn();
             timerDoSelected = new System.Windows.Forms.Timer(components);
             label3 = new Label();
+            btnGetUrl = new Button();
             tcStudy.SuspendLayout();
             tabView.SuspendLayout();
             tabEdit.SuspendLayout();
@@ -61,20 +62,11 @@
             // 
             btnStart.Location = new Point(27, 459);
             btnStart.Name = "btnStart";
-            btnStart.Size = new Size(99, 42);
+            btnStart.Size = new Size(108, 42);
             btnStart.TabIndex = 0;
-            btnStart.Text = "Obtain Study\r\ninformation";
+            btnStart.Text = "Obtain all Study\r\ninformation";
             btnStart.UseVisualStyleBackColor = true;
             btnStart.Click += btnStart_Click;
-            // 
-            // tbInfo
-            // 
-            tbInfo.Location = new Point(22, 10);
-            tbInfo.Multiline = true;
-            tbInfo.Name = "tbInfo";
-            tbInfo.ScrollBars = ScrollBars.Vertical;
-            tbInfo.Size = new Size(438, 412);
-            tbInfo.TabIndex = 1;
             // 
             // label1
             // 
@@ -137,7 +129,7 @@
             // 
             // tabView
             // 
-            tabView.Controls.Add(tbInfo);
+            tabView.Controls.Add(rtbInfo);
             tabView.Location = new Point(4, 24);
             tabView.Name = "tabView";
             tabView.Padding = new Padding(3);
@@ -145,6 +137,15 @@
             tabView.TabIndex = 0;
             tabView.Text = "View";
             tabView.UseVisualStyleBackColor = true;
+            // 
+            // rtbInfo
+            // 
+            rtbInfo.Dock = DockStyle.Fill;
+            rtbInfo.Location = new Point(3, 3);
+            rtbInfo.Name = "rtbInfo";
+            rtbInfo.Size = new Size(641, 432);
+            rtbInfo.TabIndex = 0;
+            rtbInfo.Text = "";
             // 
             // tabEdit
             // 
@@ -165,9 +166,9 @@
             label2.BackColor = SystemColors.Info;
             label2.Location = new Point(23, 200);
             label2.Name = "label2";
-            label2.Size = new Size(124, 135);
+            label2.Size = new Size(125, 135);
             label2.TabIndex = 3;
-            label2.Text = "Days is how long you\r\nare given to process\r\nthe data.  To delete a\r\nrow, set the ID to -1\r\n\r\nYou may add a row.\r\nYou must click both\r\nsave Edits and the\r\nSave Changes buttons";
+            label2.Text = "Days is how long you\r\nare given to process\r\nthe data.  Select a row\r\nand press del to delete\r\n\r\nYou may add a row.\r\nYou must click both\r\nsave Edits and the\r\nSave Changes buttons";
             // 
             // btnApply
             // 
@@ -188,6 +189,7 @@
             dgvStudyInfo.Location = new Point(178, 86);
             dgvStudyInfo.Name = "dgvStudyInfo";
             dgvStudyInfo.RowHeadersVisible = false;
+            dgvStudyInfo.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvStudyInfo.Size = new Size(441, 328);
             dgvStudyInfo.TabIndex = 0;
             dgvStudyInfo.RowsAdded += dgvStudyInfo_RowsAdded;
@@ -254,11 +256,22 @@
             label3.TabIndex = 11;
             label3.Text = "Project Name double\r\nclick to view it's page";
             // 
+            // btnGetUrl
+            // 
+            btnGetUrl.Location = new Point(27, 295);
+            btnGetUrl.Name = "btnGetUrl";
+            btnGetUrl.Size = new Size(120, 42);
+            btnGetUrl.TabIndex = 12;
+            btnGetUrl.Text = "Obtain selected\r\nstudy information";
+            btnGetUrl.UseVisualStyleBackColor = true;
+            btnGetUrl.Click += btnGetUrl_Click;
+            // 
             // GetStudies
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1086, 550);
+            Controls.Add(btnGetUrl);
             Controls.Add(label3);
             Controls.Add(tcStudy);
             Controls.Add(btnEdit);
@@ -272,7 +285,6 @@
             Text = "GetStudies";
             tcStudy.ResumeLayout(false);
             tabView.ResumeLayout(false);
-            tabView.PerformLayout();
             tabEdit.ResumeLayout(false);
             tabEdit.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dgvStudyInfo).EndInit();
@@ -283,7 +295,6 @@
         #endregion
 
         private Button btnStart;
-        private TextBox tbInfo;
         private Label label1;
         private ListBox lbSelProj;
         private Button btnSave;
@@ -304,5 +315,7 @@
         private DataGridViewTextBoxColumn MaxApps;
         private DataGridViewTextBoxColumn OrigID;
         private Label label3;
+        private Button btnGetUrl;
+        private RichTextBox rtbInfo;
     }
 }

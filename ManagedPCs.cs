@@ -247,28 +247,6 @@ namespace CreditStatistics
                 return strResult;
             }
             return strResult;
-
-
-
-            /*
-            using (var process = Process.Start(psi))
-            {
-                if (bRedirect)
-                {
-                    string output = process.StandardOutput.ReadToEnd().Trim();
-                    string error = process.StandardError.ReadToEnd().Trim();
-                    process.WaitForExit();
-
-                    // Check for SSH failure only (e.g., network issues, bad command, does not exist)
-                    if (process.ExitCode == 255 || output == "" && error != "")
-                    {
-                        MessageBox.Show("Error launching cmd:" + Argument + "-" + error);
-                    }
-                    return output.Trim(); // Strip newline characters
-                }
-            }
-            return "";
-            */
         }
 
 

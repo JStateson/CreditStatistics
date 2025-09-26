@@ -167,23 +167,23 @@ namespace CreditStatistics
                         */
                         sUnk += "Ignoring unknown project: " + ShortName + NL;
                     }
-                }
-                else
-                {
-                    i = line.IndexOf("suspended via gui:");
-                    if (i > 0 && bWanted)
-                    {
-                        string Ans = line.Substring(i + 18).Trim();
-                        clp.ProjectSuspended = (Ans != "no");
-                    }
                     else
                     {
-                        i = line.IndexOf("more work:");
+                        i = line.IndexOf("suspended via gui:");
                         if (i > 0 && bWanted)
                         {
-                            string Ans = line.Substring(i + 10).Trim();
-                            clp.ProjectNoNewWork = (Ans == "yes");
-                            bWanted = false;  // more work comes after the suspended
+                            string Ans = line.Substring(i + 18).Trim();
+                            clp.ProjectSuspended = (Ans != "no");
+                        }
+                        else
+                        {
+                            i = line.IndexOf("more work:");
+                            if (i > 0 && bWanted)
+                            {
+                                string Ans = line.Substring(i + 10).Trim();
+                                clp.ProjectNoNewWork = (Ans == "yes");
+                                bWanted = false;  // more work comes after the suspended
+                            }
                         }
                     }
                 }
@@ -274,48 +274,45 @@ namespace CreditStatistics
                 string PCname = row.Cells["PC Name"].Value.ToString();
                 if (PCname == "Totals") break;   // slame as r == ndatarows break ??
                 CheckBox cb = ThisCB(iDGV);
-                if (!cb.Checked)
-                {
-                    RawList.Add(OneRaw);
-                    continue;
-                }
                 cPClimit PCl = pandoraConfig.NameToSprintPC(PCname);
                 PCl.ClearTotals();
                 string[] lines;
-
-                string strResult = ManagedPCs.ContactPCproject(PCname, "--get_task_reports", "").ToLower();
-                if (!IsStillOnline(PCname, true, ManagedPCs.ErrorStatus == 0))
+                if (cb.Checked)
                 {
-                    row.Cells["PC name"].Style.ForeColor = cb.ForeColor;
-                    RawList.Add(OneRaw);
-                    continue;
-                }
-                if (strResult != "")
-                {
-                    ParseTaskReport(ref strResult, ref PCl);
-                    strResult = ManagedPCs.ContactPCproject(PCname, "--get_project_status", "").ToLower();
+                    string strResult = ManagedPCs.ContactPCproject(PCname, "--get_task_reports", "").ToLower();
+                    if (!IsStillOnline(PCname, true, ManagedPCs.ErrorStatus == 0))
+                    {
+                        row.Cells["PC name"].Style.ForeColor = cb.ForeColor;
+                        RawList.Add(OneRaw);
+                        continue;
+                    }
                     if (strResult != "")
                     {
-                        ParseProjectStatus(ref strResult, ref PCl);
+                        ParseTaskReport(ref strResult, ref PCl);
+                        strResult = ManagedPCs.ContactPCproject(PCname, "--get_project_status", "").ToLower();
+                        if (strResult != "")
+                        {
+                            ParseProjectStatus(ref strResult, ref PCl);
+                        }
                     }
-                }
 
-                for (int j = 0; j < PCl.ProjList.Count; j++)
-                {
-                    clp = PCl.ProjList[j];
-                    Color FCO = Color.Black;
-                    if (!ShortNameList.Contains(clp.ShortName)) continue;
-                    string sOut = "[" + clp.TotalWUcnt + "] (" + clp.ReadyToReport + ":" + clp.JobsSucceeded + ")";
-                    row.Cells[clp.ShortName].Value = sOut;
-                    int iName = PCl.GetProjNameIndex(clp.ShortName);
-                    SelectedProject = PCl.ProjList[iName];
-                    if (SelectedProject.ProjectSuspended)
-                        FCO = Color.Red;
-                    else if (SelectedProject.ProjectNoNewWork)
-                        FCO = Color.Blue;
-                    row.Cells[clp.ShortName].Style.ForeColor = FCO;
-                    int colIndex = dgv.Columns[clp.ShortName].Index; // this is fubar todo to do
-                    OneRaw[colIndex - 1] = sOut;
+                    for (int j = 0; j < PCl.ProjList.Count; j++)
+                    {
+                        clp = PCl.ProjList[j];
+                        Color FCO = Color.Black;
+                        if (!ShortNameList.Contains(clp.ShortName)) continue;
+                        string sOut = "[" + clp.TotalWUcnt + "] (" + clp.ReadyToReport + ":" + clp.JobsSucceeded + ")";
+                        row.Cells[clp.ShortName].Value = sOut;
+                        int iName = PCl.GetProjNameIndex(clp.ShortName);
+                        SelectedProject = PCl.ProjList[iName];
+                        if (SelectedProject.ProjectSuspended)
+                            FCO = Color.Red;
+                        else if (SelectedProject.ProjectNoNewWork)
+                            FCO = Color.Blue;
+                        row.Cells[clp.ShortName].Style.ForeColor = FCO;
+                        int colIndex = dgv.Columns[clp.ShortName].Index; // this is fubar todo to do
+                        OneRaw[colIndex - 1] = sOut;
+                    }
                 }
                 RawList.Add(OneRaw);
                 Application.DoEvents();
@@ -324,6 +321,19 @@ namespace CreditStatistics
             for (int i = 0; i < 2; i++)// blank out the totals and percent extra rows
                 RawList.Add(TwoRaw);
             BaseProgressBar.Value = 0;
+        }
+
+        private void ClearDataTable()
+        {
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    if (cell.ColumnIndex == 0) continue;
+                    cell.Value = "";
+                    cell.Style.ForeColor = Color.Black;
+                }
+            }
         }
 
         private void FilterResults(string sFilter)
@@ -437,6 +447,7 @@ namespace CreditStatistics
 
         private void btnScanData_Click(object sender, EventArgs e)
         {
+            ClearDataTable();
             PerformFetchTasks();
         }
     }

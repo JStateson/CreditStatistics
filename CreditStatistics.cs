@@ -759,5 +759,15 @@ namespace CreditStatistics
             asW.ShowDialog();
             asW.Dispose();
         }
+
+        private void tsmSendSC_Click(object sender, EventArgs e)
+        {
+            ReqCmds reqCmd = new ReqCmds();
+            reqCmd.sUse = "SSHBOINC";
+            reqCmd.UseRadioButtons = true;
+            SampleRequest sReq = new SampleRequest(ref ProjectStats, ref reqCmd);
+            sReq.ShowDialog();
+            sReq.Dispose();
+        }
     }
 }

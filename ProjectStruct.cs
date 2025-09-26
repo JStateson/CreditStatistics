@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Policy;
 using System.Text;
@@ -546,13 +548,9 @@ you can edit it and then send it if desired
         {
             int i, j, n = KnownProjects.Length;
             cProjectStruct localProjectStats = this;
-            if(boinc_email == null)
-            {
-                boinc_email = Environment.UserName;
-                Properties.Settings.Default.BoincWebUsername = boinc_email;
-            }
+            boinc_passwd = Properties.Settings.Default.BoincWebPassword;
+            boinc_email = Properties.Settings.Default.BoincWebUsername;   
             sshCredentials.Init();
-
 
             if (!File.Exists(WhereCurrentDefaultPandoraConfig))
                 File.WriteAllText(WhereCurrentDefaultPandoraConfig, DefaultPandoraConfig.Trim());
@@ -723,11 +721,29 @@ you can edit it and then send it if desired
             return "";
         }
 
+        public string SetStudyFromIndex(string ProjName, int inx)
+        {
+            int iLoc = ShortnameToIndex(ProjName);
+            cPSlist p = ProjectList[iLoc];
+            string[] sStudyL = p.sStudyL.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            if (sStudyL.Length == 0) return p.sStudyV;    // only one item
+            p.sStudyV = sStudyL[inx];
+            return p.sStudyV;
+        }
+
+        public bool HaveMultipleStudies(string ProjName)
+        {
+            int iLoc = ShortnameToIndex(ProjName);
+            cPSlist p = ProjectList[iLoc];
+            string[] sStudyL = p.sStudyL.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            return (sStudyL.Length > 1);
+        }
+
         public bool GetIndexToStudy(string ProjName, out int SelectedIndex, out int NumStudies)
         {
             int iLoc = ShortnameToIndex(ProjName);
             cPSlist p = ProjectList[iLoc];
-            string[] sStudyL = p.sStudyL.Split(' ');
+            string[] sStudyL = p.sStudyL.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             NumStudies = sStudyL.Length;
             if (NumStudies == 0)
             {

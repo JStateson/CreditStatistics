@@ -270,7 +270,8 @@ namespace CreditStatistics
                 switch (reqCmd.ComboxUsage)
                 {
                     case "StudyWanted":
-                        cbx.Items.AddRange(ProjectStats.ProjectList[i].sStudyL.Split(' '));
+                        cbx.Items.AddRange(ProjectStats.ProjectList[i].sStudyL.Split(new string[] { " " },
+                            StringSplitOptions.RemoveEmptyEntries));
                         break;
                 }
                 cbx.Width = 64;
@@ -691,43 +692,53 @@ namespace CreditStatistics
             foreach (cPClimit PCl in pc.PandoraDatabase)
             {
                 SelectedPC = PCl;
-                foreach (cCalcLimitProj clP in PCl.ProjList) clP.ProjectDisabled = true;
-
                 for (int i = 0; i < ProjectStats.ProjectList.Count; i++)
                 {
                     cPSlist PSl = ProjectStats.ProjectList[i];
-
                     string ProjName = PSl.shortname;
                     cCalcLimitProj newclP = PCl.GetProjStruct(ProjName);
                     GetCheckedPI(PCl.PCname, ProjName, out bool IsSprint, out int ItemSelected);
-                    string AppWanted = (ItemSelected == 1 ? "cpu" : "gpu");
+                    switch(reqCmd.ComboxUsage)
+                    {
+                        case "gpugpu":
+                            string AppWanted = (ItemSelected == 1 ? "cpu" : "gpu");
+                            if (IsSprint)
+                            {
+                                if (newclP != null)
+                                {
+                                    newclP.AppType = AppWanted;
+                                    newclP.ProjectDisabled = false;
+                                    newclP.UsedInSprint = true;
+                                }
+                                else
+                                {
+                                    newclP = new cCalcLimitProj();
+                                    newclP.init(PSl.sURL, false);
+                                    newclP.BunkerStart = "-5";
+                                    newclP.UsedInSprint = true;
+                                    newclP.AppType = AppWanted;
+                                    PCl.ProjList.Add(newclP);
+                                }
+                            }
+                            else
+                            {
+                                if (newclP != null)
+                                {
+                                    newclP.UsedInSprint = false;
+                                    newclP.UsedInGames = false;
+                                }
+                            }
+                            break;
+                        case "WUsWanted":
+                            newclP.WUsWanted = ComboChoices[ItemSelected];
+                            break;
+                        case "StudyWanted":
+                            int iLoc = ProjectStats.GetNameIndex(ProjName);
+                            string sStudyV = ProjectStats.SetStudyFromIndex(ProjName, ItemSelected);
+                            newclP.ChangeStudy(newclP);
+                            break;
+                    }
 
-                    if (IsSprint)
-                    {
-                        if (newclP != null)
-                        {
-                            newclP.AppType = AppWanted;
-                            newclP.ProjectDisabled = false;
-                            newclP.UsedInSprint = true;
-                        }
-                        else
-                        {
-                            newclP = new cCalcLimitProj();
-                            newclP.init(PSl.sURL, false);
-                            newclP.BunkerStart = "-5";
-                            newclP.UsedInSprint = true;
-                            newclP.AppType = AppWanted;
-                            PCl.ProjList.Add(newclP);
-                        }
-                    }
-                    else
-                    {
-                        if (newclP != null)
-                        {
-                            newclP.UsedInSprint = false;
-                            newclP.UsedInGames = false;
-                        }
-                    }
                 }
                 pc.WriteDBrecord(ref SelectedPC);
             }

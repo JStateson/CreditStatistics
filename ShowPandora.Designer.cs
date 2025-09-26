@@ -72,7 +72,7 @@
             tbInfo.Location = new Point(343, 36);
             tbInfo.Multiline = true;
             tbInfo.Name = "tbInfo";
-            tbInfo.ScrollBars = ScrollBars.Vertical;
+            tbInfo.ScrollBars = ScrollBars.Both;
             tbInfo.Size = new Size(511, 507);
             tbInfo.TabIndex = 8;
             // 

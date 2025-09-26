@@ -29,6 +29,7 @@ namespace CreditStatistics
         private string NL = Environment.NewLine;
         private bool CancelOperation = false;
 
+
         public EditAllAppConfigs()
         {
             InitializeComponent();

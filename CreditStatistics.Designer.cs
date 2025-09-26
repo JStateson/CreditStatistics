@@ -45,12 +45,13 @@
             communicateWithPCsToolStripMenuItem = new ToolStripMenuItem();
             slprintPreperationToolStripMenuItem = new ToolStripMenuItem();
             tsmAssignCpuGpu = new ToolStripMenuItem();
-            tsmMinWUsNeeded = new ToolStripMenuItem();
             tsmAssignStudy = new ToolStripMenuItem();
+            tsmMinWUsNeeded = new ToolStripMenuItem();
+            tsmSendSC = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
             collectDataToolStripMenuItem = new ToolStripMenuItem();
             ShowPandoraMenuItem = new ToolStripMenuItem();
             showEditAppConfigToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator1 = new ToolStripSeparator();
             whatToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             tsmWhatIs = new ToolStripMenuItem();
@@ -153,7 +154,7 @@
             // ContactProject
             // 
             ContactProject.Name = "ContactProject";
-            ContactProject.Size = new Size(161, 22);
+            ContactProject.Size = new Size(180, 22);
             ContactProject.Text = "Contact Projects";
             ContactProject.Click += ContactProject_Click;
             // 
@@ -187,7 +188,7 @@
             // 
             // slprintPreperationToolStripMenuItem
             // 
-            slprintPreperationToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tsmAssignCpuGpu, tsmAssignStudy, tsmMinWUsNeeded, collectDataToolStripMenuItem, ShowPandoraMenuItem, showEditAppConfigToolStripMenuItem, toolStripSeparator1 });
+            slprintPreperationToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tsmAssignCpuGpu, tsmAssignStudy, tsmMinWUsNeeded, tsmSendSC, toolStripSeparator1, collectDataToolStripMenuItem, ShowPandoraMenuItem, showEditAppConfigToolStripMenuItem });
             slprintPreperationToolStripMenuItem.Name = "slprintPreperationToolStripMenuItem";
             slprintPreperationToolStripMenuItem.Size = new Size(77, 20);
             slprintPreperationToolStripMenuItem.Text = "Sprint Prep";
@@ -199,6 +200,13 @@
             tsmAssignCpuGpu.Text = "Assign Cpu or Gpu to projects";
             tsmAssignCpuGpu.Click += tsmAssignCpuGpu_Click;
             // 
+            // tsmAssignStudy
+            // 
+            tsmAssignStudy.Name = "tsmAssignStudy";
+            tsmAssignStudy.Size = new Size(234, 22);
+            tsmAssignStudy.Text = "Assign Study to be used";
+            tsmAssignStudy.Click += tsmAssignStudy_Click;
+            // 
             // tsmMinWUsNeeded
             // 
             tsmMinWUsNeeded.Name = "tsmMinWUsNeeded";
@@ -206,12 +214,17 @@
             tsmMinWUsNeeded.Text = "Assign minimum WUs needed";
             tsmMinWUsNeeded.Click += tsmMinWUsNeeded_Click;
             // 
-            // tsmAssignStudy
+            // tsmSendSC
             // 
-            tsmAssignStudy.Name = "tsmAssignStudy";
-            tsmAssignStudy.Size = new Size(234, 22);
-            tsmAssignStudy.Text = "Assign Study to be used";
-            tsmAssignStudy.Click += tsmAssignStudy_Click;
+            tsmSendSC.Name = "tsmSendSC";
+            tsmSendSC.Size = new Size(234, 22);
+            tsmSendSC.Text = "Start minimum WU collection";
+            tsmSendSC.Click += tsmSendSC_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(231, 6);
             // 
             // collectDataToolStripMenuItem
             // 
@@ -233,11 +246,6 @@
             showEditAppConfigToolStripMenuItem.Size = new Size(234, 22);
             showEditAppConfigToolStripMenuItem.Text = "Show/Edit App Config";
             showEditAppConfigToolStripMenuItem.Click += showEditAppConfigToolStripMenuItem_Click;
-            // 
-            // toolStripSeparator1
-            // 
-            toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(231, 6);
             // 
             // whatToolStripMenuItem
             // 
@@ -607,5 +615,6 @@
         private ToolStripMenuItem tsmAssignStudy;
         private ToolStripMenuItem tsmMinWUsNeeded;
         private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem tsmSendSC;
     }
 }

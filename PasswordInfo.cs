@@ -22,6 +22,7 @@ namespace CreditStatistics
         {
             Properties.Settings.Default.BoincWebPassword = tbPasswd.Text;
             Properties.Settings.Default.BoincWebUsername = tbUname.Text;
+            Properties.Settings.Default.Save();
         }
 
         private void btnClearPassWD_Click(object sender, EventArgs e)
