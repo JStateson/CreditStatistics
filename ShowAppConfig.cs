@@ -175,6 +175,7 @@ namespace CreditStatistics
         {
             SelectedPC = pc.GetPCbyName(current_PCname);
             ThisClp = SelectedPC.GetProjStruct(current_Projectname);
+            if (ThisClp == null) return;
             tb_cpu.Text = ThisClp.cpu_usage.ToString("F2");
             tb_gpu.Text = ThisClp.gpu_usage.ToString("F2");
             tb_maxapps.Text = ThisClp.MaxApps.ToString();

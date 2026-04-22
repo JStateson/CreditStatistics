@@ -1,3 +1,4 @@
+
 using CreditStatistics;
 using Microsoft.Playwright;
 using Microsoft.VisualBasic.Devices;
@@ -366,6 +367,21 @@ namespace CreditStatistics
             RemoteSystems rs = new RemoteSystems(ref ProjectStats);
             rs.ShowDialog();
             rs.Dispose();
+            if(ProjectStats.DeleteSystems.Count > 0)
+            {
+                foreach(string s in ProjectStats.DeleteSystems)
+                {
+                    ManagedPCs.LocalSystems.RemoveAll(h => h.ComputerID == s);
+                    ProjectStats.sshCredentials.Remove(s);
+                    ProjectStats.pcResources.CpuGpu.RemoveAll(c => c.sPC == s); 
+                }
+                ManagedPCs.SaveManagedPCs();
+                ProjectStats.sshCredentials.SaveCredentials();
+                ProjectStats.pcResources.SavePCresource();
+            }
+            ProjectStats.DeleteSystems.Clear();
+            //MessageBox.Show("Systems deleted, program must exit.");
+            //this.Close();
         }
 
         private void cbPCavail_SelectedIndexChanged(object sender, EventArgs e)

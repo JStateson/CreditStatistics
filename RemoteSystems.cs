@@ -40,6 +40,7 @@ namespace CreditStatistics
         {
             InitializeComponent();
             ProjectStats = rProjectStats;
+            ProjectStats.DeleteSystems.Clear();
             ManagedPCs = ProjectStats.ManagedPCs;
             pcResources = ProjectStats.pcResources;
             pc = new PandoraConfig(ref rProjectStats);
@@ -81,7 +82,7 @@ namespace CreditStatistics
             {
                 string uName = (hi.UserName == "" ? "null" : hi.UserName);
                 string uPass = (hi.Password == "" ? "null" : hi.Password);
-
+                
                 /*
                 aTask = Task.Run(async () =>
                 {
@@ -484,14 +485,24 @@ namespace CreditStatistics
 
         private void btnSave_Click(object sender, EventArgs e)
         {
+            SaveAllSystems();
+        }
+
+        private void SaveAllSystems()
+        {
             foreach (DataGridViewRow row in dgv.Rows)
             {
                 if (row.IsNewRow) continue;
                 string pName = row.Cells[0].Value.ToString();
                 string uName = row.Cells[1].Value.ToString();
-                string uPass = row.Cells[2].Value.ToString();
+                string uPass = row.Cells[2].Value?.ToString() ?? "";  //jys fix for null strings
                 int nCPUs = Convert.ToInt32(row.Cells["nCPUs"].Value.ToString());
                 int nGPUs = Convert.ToInt32(row.Cells["nGPUs"].Value.ToString());
+                bool bIsOffline = !(bool) row.Cells["online"].Value;
+                if(bIsOffline && bROF)
+                {
+                    ProjectStats.DeleteSystems.Add(pName);
+                }
                 ProjectStats.sshCredentials.Add(pName, uName, uPass);
                 cHostInfo hi = ManagedPCs.NameToSystem(pName);
                 hi.UserName = uName;
@@ -516,6 +527,14 @@ namespace CreditStatistics
             SendNotepad.PasteToNotepad(rtbLocalHostsBT.Text);
         }
 
+        private bool bROF = false;
+        private void btnSaveOnLine_Click(object sender, EventArgs e)
+        {
+            bROF = true;
+            SaveAllSystems();
+            bROF = false;
+            this.Close();
+        }
     }
 
 }

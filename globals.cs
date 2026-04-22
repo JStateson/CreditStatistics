@@ -571,6 +571,14 @@ namespace CreditStatistics
                 public string sUsername;
             }
             public List<Cred> creds = new List<Cred>();
+            public void Remove(string PCname)
+            {
+                int index = creds.FindIndex(c => c.spcName == PCname);
+                if (index != -1)
+                {
+                    creds.RemoveAt(index);
+                }
+            }
             public void Add(string PCname, string Username, string Password)
             {
                 int index = creds.FindIndex(c => c.spcName == PCname);

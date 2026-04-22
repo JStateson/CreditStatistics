@@ -24,6 +24,7 @@ namespace CreditStatistics
         const int NUM_ENTRIES = 10; // number of entries in the KnownProjects array
         public int LengthLongestShortname = 10;
         public List<cPSlist> ProjectList = new List<cPSlist>();
+        public List<string>DeleteSystems = new List<string>();
         public cAllProjectStudyInfo ProjectStudyDB = new cAllProjectStudyInfo();
         public cManagedPCs ManagedPCs = new cManagedPCs();
         public cPClimit TempletDB; // boincgames sprint pandora_config file with extras

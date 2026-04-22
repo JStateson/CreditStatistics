@@ -444,6 +444,7 @@ namespace CreditStatistics
                     if(cmdRequest.Fetch_AC)
                     {
                         cCalcLimitProj clp = pc.GetProjStruct(cmdRequest.AC_ShortName);
+                        if (clp == null) return;
                         data = cmdRequest.FormReq("<get_app_config>\n" + "<url>" + clp.ProjUrl + "</url>\n" + "</get_app_config>\n");
                         await stream.WriteAsync(data, 0, data.Length, token);
                         await stream.FlushAsync(token);

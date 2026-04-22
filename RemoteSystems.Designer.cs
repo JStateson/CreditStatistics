@@ -46,6 +46,7 @@
             btnListPCs = new Button();
             tabRemote = new TabControl();
             tabPage1 = new TabPage();
+            btnSaveOnLine = new Button();
             btnSave = new Button();
             label3 = new Label();
             dgv = new DataGridView();
@@ -58,6 +59,7 @@
             version = new DataGridViewTextBoxColumn();
             tabPage2 = new TabPage();
             btnIDNotepad = new Button();
+            toolTip1 = new ToolTip(components);
             groupBox1.SuspendLayout();
             tabRemote.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -187,7 +189,7 @@
             rtbLocalHostsBT.Location = new Point(22, 199);
             rtbLocalHostsBT.Margin = new Padding(4, 3, 4, 3);
             rtbLocalHostsBT.Name = "rtbLocalHostsBT";
-            rtbLocalHostsBT.Size = new Size(511, 377);
+            rtbLocalHostsBT.Size = new Size(511, 401);
             rtbLocalHostsBT.TabIndex = 34;
             rtbLocalHostsBT.Text = "";
             rtbLocalHostsBT.WordWrap = false;
@@ -219,32 +221,47 @@
             tabRemote.Location = new Point(593, 84);
             tabRemote.Name = "tabRemote";
             tabRemote.SelectedIndex = 0;
-            tabRemote.Size = new Size(593, 492);
+            tabRemote.Size = new Size(593, 516);
             tabRemote.TabIndex = 40;
             // 
             // tabPage1
             // 
+            tabPage1.Controls.Add(btnSaveOnLine);
             tabPage1.Controls.Add(btnSave);
             tabPage1.Controls.Add(label3);
             tabPage1.Controls.Add(dgv);
             tabPage1.Location = new Point(4, 24);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(585, 464);
+            tabPage1.Size = new Size(585, 488);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "UsernamePassword";
             tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnSaveOnLine
+            // 
+            btnSaveOnLine.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnSaveOnLine.ForeColor = Color.Blue;
+            btnSaveOnLine.Location = new Point(444, 11);
+            btnSaveOnLine.Margin = new Padding(4, 3, 4, 3);
+            btnSaveOnLine.Name = "btnSaveOnLine";
+            btnSaveOnLine.Size = new Size(100, 44);
+            btnSaveOnLine.TabIndex = 41;
+            btnSaveOnLine.Text = "Remove all\r\nOffline PCs";
+            toolTip1.SetToolTip(btnSaveOnLine, "This will exit the application");
+            btnSaveOnLine.UseVisualStyleBackColor = true;
+            btnSaveOnLine.Click += btnSaveOnLine_Click;
             // 
             // btnSave
             // 
             btnSave.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnSave.ForeColor = Color.Blue;
-            btnSave.Location = new Point(372, 8);
+            btnSave.Location = new Point(353, 13);
             btnSave.Margin = new Padding(4, 3, 4, 3);
             btnSave.Name = "btnSave";
-            btnSave.Size = new Size(71, 39);
+            btnSave.Size = new Size(71, 44);
             btnSave.TabIndex = 40;
-            btnSave.Text = "Save";
+            btnSave.Text = "Save\r\nAll";
             btnSave.UseVisualStyleBackColor = true;
             btnSave.Click += btnSave_Click;
             // 
@@ -267,7 +284,7 @@
             dgv.AllowUserToResizeRows = false;
             dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgv.Columns.AddRange(new DataGridViewColumn[] { pcname, username, password, online, nCPUs, nGPUs, version });
-            dgv.Location = new Point(21, 53);
+            dgv.Location = new Point(21, 73);
             dgv.Name = "dgv";
             dgv.RowHeadersVisible = false;
             dgv.Size = new Size(546, 392);
@@ -324,7 +341,7 @@
             tabPage2.Location = new Point(4, 24);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(585, 464);
+            tabPage2.Size = new Size(585, 488);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Folder Locations";
             tabPage2.UseVisualStyleBackColor = true;
@@ -343,7 +360,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1209, 594);
+            ClientSize = new Size(1209, 612);
             Controls.Add(btnIDNotepad);
             Controls.Add(btnReadBoinc);
             Controls.Add(tabRemote);
@@ -398,5 +415,7 @@
         private DataGridViewTextBoxColumn nGPUs;
         private DataGridViewTextBoxColumn version;
         private Button btnIDNotepad;
+        private Button btnSaveOnLine;
+        private ToolTip toolTip1;
     }
 }

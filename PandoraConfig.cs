@@ -329,11 +329,13 @@ namespace CreditStatistics
                 {
                     if (!clp.UsedInSprint) continue;
                     bool b = clp.AppType == "cpu";
+                    
                     if(clp.ShowUsedCpuGpu == "")
                     {
-                        MessageBox.Show("No Data for cpu or cpu");
+                        //MessageBox.Show("No Data for cpu or cpu");
                         break;
                     }
+                    
                     string[] sN = clp.ShowUsedCpuGpu.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries);
                     int sn1 = int.Parse(sN[0]);
                     int sn2 = int.Parse(sN[1]);

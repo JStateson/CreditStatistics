@@ -179,7 +179,9 @@ namespace CreditStatistics
                             aTask = Task.Run(async () =>
                             {
                                 if (hi.IPaddress != "127.0.0.1")
+                                {
                                     hi.HasSSH = await globals.PortChecker.IsPortOpenAsync(hi.IPaddress, reqCmd.nPorts[1]);
+                                }
                                 else hi.HasSSH = true;
                                 hi.HasBOINC = await globals.PortChecker.IsPortOpenAsync(hi.IPaddress, reqCmd.nPorts[0]);
                             });
