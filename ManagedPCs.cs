@@ -175,7 +175,7 @@ namespace CreditStatistics
 
             if (hi.OStype != "w")
             {
-                Argument = ck + $" scp {sLocalFile}  {remoteUser}@{remoteHost}:{sRemoteFile}";
+                Argument = ck + $" scp {sLocalFile}  {remoteUser}@{PCname}:{sRemoteFile}"; // was remotehost
             }
             else
             {
@@ -256,7 +256,7 @@ namespace CreditStatistics
             cHostInfo hi = NameToSystem(PCname);
             string remoteUser = hi.UserName;
             string remotePassword = hi.Password;
-            string remoteHost = hi.IPaddress;
+            string remoteHost = PCname; // hi.IPaddress; // want to use PC name,not IP as the PC may be dhcp and not static
             string ck = "/" + CK;
             ErrorStatus = 0;
             strResult = "";
@@ -346,9 +346,23 @@ namespace CreditStatistics
             cHostInfo hi = NameToSystem(PCname);
             string remoteUser = hi.UserName;
             string remotePassword = hi.Password;
-            string remoteHost = hi.IPaddress;
+            string remoteHost = hi.ComputerID; // hi.IPaddress; // want to use name, not the IP as the PC may be dhcp and not static
             string remoteCommand = "";
             string ck = "/c";
+
+            if (hi.IPaddress == "127.0.0.1")
+            {
+                var psi0 = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    UseShellExecute = true,
+                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                };
+                Process.Start(psi0);
+                return;
+            }
+
+
             if (hi.OStype != "w" )
             {
                 Argument = remoteUser == "" ? ck + $" ssh {remoteHost} \"{remoteCommand}\"" :
@@ -359,6 +373,7 @@ namespace CreditStatistics
                 Argument = remoteUser == "" ? ck + $" ssh {remoteHost} {remoteCommand}" :
                     ck + $" ssh {remoteUser}@{remoteHost} {remoteCommand}";
             }
+
             var psi = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
@@ -409,7 +424,7 @@ namespace CreditStatistics
                 if (hi.IPaddress == "127.0.0.1")
                     sArgs = " --project " + MasterUrl + " " + sCmd;
                 else
-                    sArgs = " --host " + hi.IPaddress + " --project " + MasterUrl + " " + sCmd;
+                    sArgs = " --host " + PCname + " --project " + MasterUrl + " " + sCmd; // hi.IPaddress is used instead of name as the PC may be dhcp and not static
             }
 
             else
@@ -418,7 +433,7 @@ namespace CreditStatistics
                 if (hi.IPaddress == "127.0.0.1")
                     sArgs =  sCmd;
                 else
-                    sArgs = " --host " + hi.IPaddress + " " +  sCmd;
+                    sArgs = " --host " + PCname + " " +  sCmd;    // ditto
             }
 
             try
