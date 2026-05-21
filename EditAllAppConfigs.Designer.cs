@@ -48,6 +48,7 @@
             tbCCconfig = new TextBox();
             btnSendCcConfig = new Button();
             label3 = new Label();
+            btnCpyAC = new Button();
             cmsConfigOptions.SuspendLayout();
             SuspendLayout();
             // 
@@ -155,7 +156,7 @@
             // btnSendAppConfig
             // 
             btnSendAppConfig.ForeColor = SystemColors.Highlight;
-            btnSendAppConfig.Location = new Point(685, 45);
+            btnSendAppConfig.Location = new Point(680, 22);
             btnSendAppConfig.Name = "btnSendAppConfig";
             btnSendAppConfig.Size = new Size(117, 42);
             btnSendAppConfig.TabIndex = 9;
@@ -188,7 +189,7 @@
             // btnSendCcConfig
             // 
             btnSendCcConfig.ForeColor = SystemColors.Highlight;
-            btnSendCcConfig.Location = new Point(1073, 45);
+            btnSendCcConfig.Location = new Point(1071, 22);
             btnSendCcConfig.Name = "btnSendCcConfig";
             btnSendCcConfig.Size = new Size(115, 42);
             btnSendCcConfig.TabIndex = 12;
@@ -207,11 +208,22 @@
             label3.TabIndex = 13;
             label3.Text = "right click mouse in either\r\nbox for additional features";
             // 
+            // btnCpyAC
+            // 
+            btnCpyAC.Location = new Point(578, 94);
+            btnCpyAC.Name = "btnCpyAC";
+            btnCpyAC.Size = new Size(117, 23);
+            btnCpyAC.TabIndex = 14;
+            btnCpyAC.Text = "Copy to Notepad";
+            btnCpyAC.UseVisualStyleBackColor = true;
+            btnCpyAC.Click += btnCpyAC_Click;
+            // 
             // EditAllAppConfigs
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1336, 616);
+            Controls.Add(btnCpyAC);
             Controls.Add(label3);
             Controls.Add(btnSendCcConfig);
             Controls.Add(tbCCconfig);
@@ -223,6 +235,7 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             Name = "EditAllAppConfigs";
             Text = "EditAllAppConfigs";
+            Controls.SetChildIndex(gbPCs, 0);
             Controls.SetChildIndex(radioBoxGroup1, 0);
             Controls.SetChildIndex(btnCountAC, 0);
             Controls.SetChildIndex(rtbLocalHostsBT, 0);
@@ -232,6 +245,7 @@
             Controls.SetChildIndex(tbCCconfig, 0);
             Controls.SetChildIndex(btnSendCcConfig, 0);
             Controls.SetChildIndex(label3, 0);
+            Controls.SetChildIndex(btnCpyAC, 0);
             cmsConfigOptions.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -258,5 +272,6 @@
         private ToolStripMenuItem copyToolStripMenuItem;
         private ToolStripMenuItem pasteToolStripMenuItem;
         private ToolStripMenuItem deleteToolStripMenuItem;
+        private Button btnCpyAC;
     }
 }

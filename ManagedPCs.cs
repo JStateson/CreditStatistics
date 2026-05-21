@@ -534,7 +534,7 @@ namespace CreditStatistics
                     return ls;
                 }
             }
-            Debug.Assert(false, "PCname not in database");
+            //Debug.Assert(false, "PCname not in database");
             return null;
         }
 

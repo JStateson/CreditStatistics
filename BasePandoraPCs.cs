@@ -357,12 +357,31 @@ namespace CreditStatistics
                 SetScanDate();
         }
 
+        private string GetSysInfo(string sname)
+        {
+            string sOut = sname + Environment.NewLine;
+            cHostInfo hi = ManagedPCs.NameToSystem(sname);
+            if( hi != null )
+            {
+                sOut += "OS: " + ((hi.OStype == "w") ?"Windows" : "Linux")+ Environment.NewLine;
+                sOut += "CPU Cores: " + hi.ProcessorCount + Environment.NewLine;
+                sOut += "GPU Cores: " + hi.GPUcount + Environment.NewLine;
+            }
+            return sOut;
+        }
+
+        public void ShowInfoByIndex(int n)
+        {
+            if (n < 0 || n >= ManagedPCs.LocalSystems.Count) return;
+            tbSysInfo.Text = GetSysInfo(ManagedPCs.LocalSystems[n].ComputerID);
+        }
 
         private void NotifyForms(bool bRescan, string sname, int iLoc, bool ForceCancel)
         {
             if (InitLoad) return;
             LastCount = iLoc;
             PCsChanged?.Invoke(this, new PCsChangedEventArgs(bRescan, sname, iLoc, ForceCancel));
+            tbSysInfo.Text = GetSysInfo(sname); ;
         }
 
 

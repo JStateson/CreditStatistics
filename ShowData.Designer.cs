@@ -97,7 +97,7 @@
             // tbInfo
             // 
             tbInfo.Font = new Font("Courier New", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            tbInfo.Location = new Point(3, 6);
+            tbInfo.Location = new Point(-4, 3);
             tbInfo.Multiline = true;
             tbInfo.Name = "tbInfo";
             tbInfo.ScrollBars = ScrollBars.Vertical;

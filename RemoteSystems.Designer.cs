@@ -371,6 +371,7 @@
             Controls.Add(rtbLocalHostsBT);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             Margin = new Padding(4, 3, 4, 3);
+            MaximizeBox = false;
             Name = "RemoteSystems";
             Text = "RemoteSystems";
             groupBox1.ResumeLayout(false);

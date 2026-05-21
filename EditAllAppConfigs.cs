@@ -48,7 +48,7 @@ namespace CreditStatistics
             int i = s.IndexOf('(');
             int j = s.IndexOf(')');
             Debug.Assert(i >= 0 && j >= 0);
-            return s.Substring(0,i+1) + PJname + s.Substring(j);
+            return s.Substring(0, i + 1) + PJname + s.Substring(j);
         }
 
 
@@ -116,11 +116,12 @@ namespace CreditStatistics
             }
         }
 
-
+        private string sNotePadOut;
         private async void btnCountAC_Click(object sender, EventArgs e)
         {
 
             int n = 0;
+            sNotePadOut = "";
             Color fC;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
@@ -129,10 +130,13 @@ namespace CreditStatistics
             }
             if (n < 0) return;
             StartPBuse(n);
+            n = -1;
             CancelOperation = false;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
+                n++;
                 if (!hi.HasBOINC) continue;
+                ShowInfoByIndex(n);
                 string PCname = hi.ComputerID;
                 cPClimit PCl = pandoraConfig.NameToSprintPC(PCname);
                 foreach (cLHe lh in hi.LocalProjID)
@@ -142,20 +146,24 @@ namespace CreditStatistics
                     lh.HasAppConfig = File.Exists(filePath);
                     if (CancelOperation) break;
                     await pandoraRPC.FetchOne_app_config(PCname, sn);
+                    string sOut;
                     if (PCl.ErrorStatus < globals.ERR_critical)
                     {
                         PCl.app_config = PCl.strResult.Split(new string[] { "\n", "\r", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        string sOut = globals.WriteACrecord(filePath, ref PCl.app_config);
+                        sOut = globals.WriteACrecord(filePath, ref PCl.app_config);
                         fC = Color.Blue;
                         if (PCl.ErrorStatus == globals.ERR_warning)
                             fC = Color.Black;
                         lh.HasAppConfig = true;
+                        sNotePadOut += sOut;
                         globals.AppendColoredText(rtbLocalHostsBT, sOut, fC);
                     }
                     else
                     {
                         fC = Color.Red;
-                        globals.AppendColoredText(rtbLocalHostsBT, "PC " + PCname + " Proj: " + sn + " has  no app_config\r\n", fC);
+                        sOut = "PC " + PCname + " Proj: " + sn + " has  no app_config\r\n";
+                        sNotePadOut += sOut;
+                        globals.AppendColoredText(rtbLocalHostsBT, sOut, fC);
                         lh.HasAppConfig = false;
                     }
                     IncPBuse();
@@ -192,10 +200,13 @@ namespace CreditStatistics
             if (n < 0) return;
             StartPBuse(n);
             CancelOperation = false;
+            n = -1;
             foreach (cHostInfo hi in ManagedPCs.LocalSystems)
             {
+                n++;
                 if (!hi.HasBOINC) continue;
                 if (CancelOperation) break;
+                ShowInfoByIndex(n);
                 IncPBuse();
                 cPClimit PCl = pandoraConfig.GetPCbyName(hi.ComputerID);
                 await pandoraRPC.FetchOne_cc_config(hi.ComputerID);
@@ -278,7 +289,7 @@ namespace CreditStatistics
                         rtb.SelectedText = ""; break;
                 }
             }
-            switch((string)menuItem.Tag)
+            switch ((string)menuItem.Tag)
             {
                 case "fetch1cc":
                     PCl = pandoraConfig.GetPCbyName(SelectedPCname);
@@ -317,7 +328,7 @@ namespace CreditStatistics
                     if (n < 0) return;
                     StartPBuse(n);
                     CancelOperation = false;
-                    
+
                     foreach (cLHe nlh in hi.LocalProjID)
                     {
                         string sn = nlh.ProjectName;
@@ -366,6 +377,20 @@ namespace CreditStatistics
                     StopPBuse();
                     break;
             }
+        }
+
+        private void PutOnNotepad(string strIn)
+        {
+            CSendNotepad SendNotepad = new CSendNotepad();
+            SendNotepad.PasteToNotepad(strIn);
+        }
+
+        private void btnCpyAC_Click(object sender, EventArgs e)
+        {
+            if(sNotePadOut != "")
+            {
+                PutOnNotepad(sNotePadOut);
+            }   
         }
     }
 }

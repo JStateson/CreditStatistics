@@ -177,6 +177,7 @@
             // 
             // dgvStudyInfo
             // 
+            dgvStudyInfo.AllowUserToAddRows = false;
             dgvStudyInfo.AllowUserToDeleteRows = false;
             dgvStudyInfo.AllowUserToResizeColumns = false;
             dgvStudyInfo.AllowUserToResizeRows = false;

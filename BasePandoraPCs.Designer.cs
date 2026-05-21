@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             gbPCs = new GroupBox();
+            tbSysInfo = new TextBox();
             lbLastScanned = new Label();
             label2 = new Label();
             btnReScan = new Button();
@@ -43,6 +44,7 @@
             // 
             // gbPCs
             // 
+            gbPCs.Controls.Add(tbSysInfo);
             gbPCs.Controls.Add(lbLastScanned);
             gbPCs.Controls.Add(label2);
             gbPCs.Controls.Add(btnReScan);
@@ -55,6 +57,14 @@
             gbPCs.TabIndex = 2;
             gbPCs.TabStop = false;
             gbPCs.Text = "Systems to use";
+            // 
+            // tbSysInfo
+            // 
+            tbSysInfo.Location = new Point(124, 293);
+            tbSysInfo.Multiline = true;
+            tbSysInfo.Name = "tbSysInfo";
+            tbSysInfo.Size = new Size(100, 81);
+            tbSysInfo.TabIndex = 20;
             // 
             // lbLastScanned
             // 
@@ -180,5 +190,6 @@
         private Label label2;
         private Button btnCancel;
         protected GroupBox gbPCs;
+        private TextBox tbSysInfo;
     }
 }

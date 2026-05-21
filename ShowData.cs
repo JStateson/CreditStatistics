@@ -1162,6 +1162,12 @@ namespace CreditStatistics
             if (ts.OnStartup) RBsetSystemChecked(ts.sHostName); // set the radio button for the PC to checked
 
             ts.selProjList = ts.selPClimit.GetProjStruct(ts.ShortName); // this is the ProjList for the project ShortName on the PC sHostName
+            if(ts.selProjList == null)
+            { 
+                tbHdrInfo.Text += "Error: Project ID for " + ts.ShortName + " not found for PC " + ts.sHostName + NL;
+                StopSequencing();
+                return;
+            }
             HDRresults = ts.selProjList.HDRresults;
             ts.hi = ProjectStats.ManagedPCs.NameToSystem(ts.sHostName);     // from the managed PC, we need the list of project IDs
             ts.ProjID = ts.hi.GetProjectID(ts.ShortName);                   // project ID for the project ShortName on the PC
