@@ -67,6 +67,9 @@
             btnPaste = new Button();
             tbInfo = new TextBox();
             groupBox2 = new GroupBox();
+            groupBox3 = new GroupBox();
+            btnRuAlt = new Button();
+            tbAltID = new TextBox();
             cbStudyAvail = new ComboBox();
             btnGetData = new Button();
             tbProjID = new TextBox();
@@ -83,9 +86,11 @@
             gbSamURL = new GroupBox();
             tbProjUrl = new TextBox();
             label1 = new Label();
+            toolTip1 = new ToolTip(components);
             menuStrip1.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
+            groupBox3.SuspendLayout();
             SuspendLayout();
             // 
             // contextMenuStrip1
@@ -154,7 +159,7 @@
             // ContactProject
             // 
             ContactProject.Name = "ContactProject";
-            ContactProject.Size = new Size(180, 22);
+            ContactProject.Size = new Size(161, 22);
             ContactProject.Text = "Contact Projects";
             ContactProject.Click += ContactProject_Click;
             // 
@@ -370,6 +375,7 @@
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(groupBox3);
             groupBox2.Controls.Add(cbStudyAvail);
             groupBox2.Controls.Add(btnGetData);
             groupBox2.Controls.Add(tbProjID);
@@ -389,6 +395,36 @@
             groupBox2.TabIndex = 3;
             groupBox2.TabStop = false;
             groupBox2.Text = "Selected Options";
+            // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(btnRuAlt);
+            groupBox3.Controls.Add(tbAltID);
+            groupBox3.Location = new Point(53, 245);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new Size(246, 90);
+            groupBox3.TabIndex = 12;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Host ID can be changed";
+            // 
+            // btnRuAlt
+            // 
+            btnRuAlt.ForeColor = SystemColors.Highlight;
+            btnRuAlt.Location = new Point(26, 37);
+            btnRuAlt.Name = "btnRuAlt";
+            btnRuAlt.Size = new Size(75, 23);
+            btnRuAlt.TabIndex = 13;
+            btnRuAlt.Text = "RUN";
+            btnRuAlt.UseVisualStyleBackColor = true;
+            btnRuAlt.Click += btnRuAlt_Click;
+            // 
+            // tbAltID
+            // 
+            tbAltID.Location = new Point(130, 38);
+            tbAltID.Name = "tbAltID";
+            tbAltID.Size = new Size(100, 23);
+            tbAltID.TabIndex = 12;
+            toolTip1.SetToolTip(tbAltID, "Change this value to get\r\ninformation on other users\r\nPC systems.  You need to\r\nknow thelir Host ID");
             // 
             // cbStudyAvail
             // 
@@ -557,6 +593,8 @@
             groupBox1.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -616,5 +654,9 @@
         private ToolStripMenuItem tsmMinWUsNeeded;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripMenuItem tsmSendSC;
+        private TextBox tbAltID;
+        private GroupBox groupBox3;
+        private ToolTip toolTip1;
+        private Button btnRuAlt;
     }
 }

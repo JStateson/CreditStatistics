@@ -1037,6 +1037,12 @@ namespace CreditStatistics
             }
             else
             {
+                if (readRequest.UnknownHostID != "")
+                {
+                    readRequest.StudyName = readRequest.UnknownHostID;
+                }
+
+
                 tbInfo.Text += sOutHdrs + Environment.NewLine + sOut + sTotals + Environment.NewLine + NL +
                 "Study: " + readRequest.sStudyV + " name: " + readRequest.StudyName + NL;
             }

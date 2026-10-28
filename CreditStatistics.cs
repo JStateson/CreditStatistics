@@ -174,8 +174,9 @@ namespace CreditStatistics
         {
             cPSlist PSl = ProjectStats.ProjectList[TagOfProject];
             PSl.sPageV = tbPage.Text;
-            string sProjname = tbProjID.Text;
-            tbProjUrl.Text = PSl.FormURL(sProjname);
+            string sHostname = tbProjID.Text;
+            tbProjUrl.Text = PSl.FormURL(sHostname);
+            tbAltID.Text = sHostname;
         }
 
         private void SetLastStudy(string shortname, string PCname)
@@ -271,7 +272,7 @@ namespace CreditStatistics
             rr.shortname = ProjectStats.ShortName(TagOfProject);
             rr.sStudyV = PSl.sStudyV;
             rr.sValid = PSl.sValid;
-            rr.sHostID = tbProjID.Text;
+            rr.sHostID =  tbProjID.Text; // tbAltID.Text not useful here as the url is not used
             rr.UrlWanted = PSl.FormURL(rr.sHostID);
             ShowData showData = new ShowData(ref ProjectStats, rr);
             showData.ShowDialog();
@@ -304,10 +305,24 @@ namespace CreditStatistics
 
         private void btnRun_Click(object sender, EventArgs e)
         {
+            RunThisUrl("");
+        }
+
+        private void RunThisUrl(string UnknowID)
+        {
             string sUrl = tbProjUrl.Text;
             FormReadRequest(sUrl);
             newReadRequest.UseStudy = true;
+            newReadRequest.UnknownHostID = UnknowID;
             ShowNotepadData(ref ProjectStats, ref newReadRequest);
+        }
+
+
+        private void btnRuAlt_Click(object sender, EventArgs e)
+        {
+            cPSlist PSl = ProjectStats.ProjectList[TagOfProject];
+            tbProjUrl.Text = PSl.FormURL(tbAltID.Text);
+            RunThisUrl(tbAltID.Text);
         }
 
         internal class CSendNotepad
@@ -367,13 +382,13 @@ namespace CreditStatistics
             RemoteSystems rs = new RemoteSystems(ref ProjectStats);
             rs.ShowDialog();
             rs.Dispose();
-            if(ProjectStats.DeleteSystems.Count > 0)
+            if (ProjectStats.DeleteSystems.Count > 0)
             {
-                foreach(string s in ProjectStats.DeleteSystems)
+                foreach (string s in ProjectStats.DeleteSystems)
                 {
                     ManagedPCs.LocalSystems.RemoveAll(h => h.ComputerID == s);
                     ProjectStats.sshCredentials.Remove(s);
-                    ProjectStats.pcResources.CpuGpu.RemoveAll(c => c.sPC == s); 
+                    ProjectStats.pcResources.CpuGpu.RemoveAll(c => c.sPC == s);
                 }
                 ManagedPCs.SaveManagedPCs();
                 ProjectStats.sshCredentials.SaveCredentials();

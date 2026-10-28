@@ -794,6 +794,7 @@ namespace CreditStatistics
             public string PCname;  // is usually unknown if user pastes a url
             public string sValidV;  // usually 4 gets valid results
             public bool UseStudy = false;
+            public string UnknownHostID; // if host id is from another user
         }
 
         public class cOrganizedRaw
