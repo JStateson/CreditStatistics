@@ -16,3 +16,5 @@ Website are scraped using Microsoft's Playwright to avoid bot blocks.  Currently
 
 OpenSSH is needed for control of remote PCs.  Private repository BOINC830Pandora has notes on this.
 
+If you just want to lookup the results from some other user then enter their host id, select the project, and click run
+
